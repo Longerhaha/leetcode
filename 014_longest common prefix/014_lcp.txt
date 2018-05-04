@@ -1,0 +1,72 @@
+//commit 1:868ms  commit4:12ms    commit5:4ms
+char* longestCommonPrefix(char** strs, int strsSize) {
+    
+    int len_str_0 = strlen(strs[0]);
+    char cur_str;
+    int i,j;
+    int flag_end_find = 0;
+    
+    if(0 == strsSize)
+        return "";
+    
+    for(i=0; i<len_str_0; i++){
+        cur_str = strs[0][i];
+        for(j=1; j<strsSize; j++){
+            if(strs[j][i] != cur_str || strs[j][i] == '\n'){
+                flag_end_find = 1;
+                break;
+            }       
+        }
+        if(flag_end_find)
+            break;
+    }
+    strs[0][i] = 0;
+    return strs[0];
+    
+    //return (*(strs+1)+1);
+}
+
+
+/*commit 3:4ms
+char* longestCommonPrefix(char** strs, int strsSize) {
+    
+    int len_str_0 = strlen(strs[0]);
+    char *str = strs[0];
+    char cur_str;
+    int i,j;
+    int flag_end_find = 0;
+    
+    if(0 == strsSize)
+        return "";
+    
+    for(i=0; i<len_str_0; i++){
+        cur_str = str[i];
+        for(j=1; j<strsSize; j++){
+            if(strs[j][i] != cur_str || strs[j][i] == '\n'){
+                flag_end_find = 1;
+                break;
+            }       
+        }
+        if(flag_end_find)
+            break;
+    }
+    str[i] = 0;
+    return strs[0];
+    
+    //return (*(strs+1)+1);
+}*/
+
+
+
+/* commit2: 2ms
+char* longestCommonPrefix(char** strs, int strsSize) {  
+    char* str=strs[0];  
+    int i,j;  
+    if(strsSize==0)return "";  
+    for(i=1;i<strsSize;i++){  
+        j=0;  
+        while(str[j] && strs[i][j] && str[j]==strs[i][j])j++;  
+        str[j]=0;  
+    }  
+    return str;  
+}  */
