@@ -1,0 +1,124 @@
+#define type_element char 
+typedef struct stack * pStack;
+
+typedef struct stack{
+    type_element data;
+    pStack next;
+}Stack;
+
+pStack stack_init(void){
+    pStack pShead = (pStack)malloc(sizeof(Stack));
+    pShead->data = 0;
+    pShead->next = NULL;
+    return pShead;
+}
+
+int stack_is_empty(pStack head){
+    return (NULL == (head->next));
+}
+
+int stack_push(pStack head, type_element data){
+    
+    pStack pStemp;
+    pStack pSnode = (pStack)malloc(sizeof(Stack));
+    if(NULL == pSnode)
+        return 0;
+    
+    pSnode->data  = data;
+    
+    pStemp = head->next;
+    head->next = pSnode;
+    pSnode->next = pStemp;
+    return 1;
+}
+    
+
+type_element stack_pop(pStack head){
+    type_element head_data = head->next->data;
+    pStack pStemp;
+    pStemp = head->next;
+    head->next = pStemp->next;
+    free(pStemp);
+    return head_data;
+}
+    
+
+type_element stack_top_element(pStack head){
+    if(stack_is_empty(head))
+        return -1;//空栈
+    else
+        return head->next->data;
+}
+
+//0 可以匹配
+//-1 data的优先级比栈顶元素高
+//1 data的优先级比栈顶元素低
+int judge_priority(pStack *head, type_element data){
+    type_element data_Shead = stack_top_element(head);
+    if('(' == data){
+        if('(' == data_Shead || '[' == data_Shead || '{' == data_Shead)
+            return 1;
+        else
+            return -1;
+    }
+    else if('[' == data){
+        if('[' == data_Shead || '{' == data_Shead)
+            return 1;
+        else
+            return -1;
+    }
+    else if('{' == data){
+        if('{' == data_Shead)
+            return 1;
+        else
+            return -1;
+    }
+    else if(')' == data){
+        if('(' == data_Shead)
+            return 0;
+        else
+            return -1; 
+    }
+    else if(']' == data){
+        if('[' == data_Shead)
+            return 0;
+        else
+            return -1; 
+    }
+    else if('}' == data){
+        if('{' == data_Shead)
+            return 0;
+        else
+            return -1; 
+    }
+    
+    return -1;//输入符号不对
+}
+
+bool isValid(char* s) {
+    
+    char *p = s;
+    if(0 == *p)
+        return true;
+    pStack head = stack_init();
+    
+    while(*p){
+        if(stack_is_empty(head))
+            stack_push(head, *p);
+        else if(0 == judge_priority(head, *p)){ //可以匹配
+            stack_pop(head);
+        }
+        else if(1 == judge_priority(head, *p)){ //优先级低，可以入栈
+            stack_push(head, *p);
+        }
+        else   //error
+            return false;
+        
+        p++;
+    }
+    if(stack_is_empty(head))
+        return true;
+    else
+        return false;
+    
+}
