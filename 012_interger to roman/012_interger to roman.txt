@@ -1,0 +1,89 @@
+char* intToRoman(int num) {
+    
+    /*method 1：代码冗余大
+    char *mat_to_roman = (char *)malloc(sizeof(char) * 50);//保证足够大的存储
+    char pos = 0;//当前比较后，下一个存储的位置
+    while(num){
+        if(num >= 1000){
+            mat_to_roman[pos++] = 'M';
+            num -= 1000;
+        }
+        else if(num >= 900){
+            mat_to_roman[pos++] = 'C';
+            mat_to_roman[pos++] = 'M';
+            num -= 900;
+        }
+        else if(num >= 500){
+            mat_to_roman[pos++] = 'D';
+            num -= 500;
+        }
+        else if(num >= 400){
+            mat_to_roman[pos++] = 'C';
+            mat_to_roman[pos++] = 'D';
+            num -= 400;
+        }
+        else if(num >= 100){
+            mat_to_roman[pos++] = 'C';
+            num -= 100;
+        }
+        else if(num >= 90){
+            mat_to_roman[pos++] = 'X';
+            mat_to_roman[pos++] = 'C';
+            num -= 90;
+        }
+        else if(num >= 50){
+            mat_to_roman[pos++] = 'L';
+            num -= 50;
+        }
+        else if(num >= 40){
+            mat_to_roman[pos++] = 'X';
+            mat_to_roman[pos++] = 'L';
+            num -= 40;
+        }
+        else if(num >= 10){
+            mat_to_roman[pos++] = 'X';
+            num -= 10;
+        }
+        else if(num >= 9){
+            mat_to_roman[pos++] = 'I';
+            mat_to_roman[pos++] = 'X';
+            num -= 9;
+        }
+        else if(num >= 5){
+            mat_to_roman[pos++] = 'V';
+            num -= 5;
+        }
+        else if(num >= 4){
+            mat_to_roman[pos++] = 'I';
+            mat_to_roman[pos++] = 'V';
+            num -= 4;
+        }
+        else if(num >= 1){
+            mat_to_roman[pos++] = 'I';
+            num -= 1;
+        }
+    }
+    mat_to_roman[pos] = 0;
+    return mat_to_roman;*/
+    
+    //method 2:代码相对较少，应用网站上该题36ms的案例，学习一下。
+    if(num<=0)
+        return NULL;
+    char* ret = (char*)malloc(20);
+    memset(ret, 0, 20);//做的好
+    int num_base[] = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+    char* roman_base[] = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV","I"};
+    
+    int i = 0;
+    while(num > 0){
+        if(num >= num_base[i]){
+            strcat(ret,roman_base[i]);
+            num -= num_base[i];
+        }else{
+            i++;
+        }
+    }
+    strcat(ret,"\0");
+    
+    return ret;
+}
