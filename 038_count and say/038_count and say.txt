@@ -1,0 +1,31 @@
+#define outLenOf_times_n ((int)(pow(2,n/2)))  //根据n生成需要的内存，相比固定的数（比如1000）算是好点了，前提是该数需要是个偶数
+char* countAndSay(int n) {
+    int i,j;
+    int num_cnt_same = 1;//上一个字符数数的长度
+    int pos_last_ans;//上一个数数的位置
+    int len_last_str = 1;//上一个报数字符串的长度
+    char *ans_dcnt = (char *)malloc(outLenOf_times_n*n*sizeof(char));//前一半保存的是上一个报数的结果  后一半保存的是当前报数的结果
+    //初始化第一个报数为1
+    ans_dcnt[0] = '1';
+    memset(ans_dcnt+1, 0, outLenOf_times_n*n-1);
+    
+    for(i=0; i<(n-1); i++){ //报数n-1次+第一个1
+        pos_last_ans = 0;//数数初始化
+        num_cnt_same = 1;
+        for(j=0; j<len_last_str; j++){
+            if(ans_dcnt[j+1] == ans_dcnt[j])
+                num_cnt_same += 1;
+            else{
+                ans_dcnt[outLenOf_times_n/2*n+pos_last_ans] = num_cnt_same+'0';
+                ans_dcnt[outLenOf_times_n/2*n+pos_last_ans+1] = ans_dcnt[j];
+                pos_last_ans+=2;
+                num_cnt_same = 1;
+            }
+        }
+        //把报数的结果拷贝到前面一段的内存，并清零
+        memcpy(ans_dcnt, ans_dcnt+outLenOf_times_n/2*n, pos_last_ans);
+        memset(ans_dcnt+outLenOf_times_n/2*n, 0, pos_last_ans);
+        len_last_str = pos_last_ans;//记录上个报数的字符串长度
+    }
+    return ans_dcnt;
+}
