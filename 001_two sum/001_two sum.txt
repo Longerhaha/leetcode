@@ -6,12 +6,10 @@ int* twoSum(int* nums, int numsSize, int target) {
     int *rslt = (int *)malloc(2*sizeof(int));
     for(i=0; i<numsSize; i++)
         for(j=i+1; j<numsSize; j++){
-            //if(nums[j] != nums[i]){//不能重复利用
-                if(target == (nums[j] + nums[i])){
-                    rslt[0] = i;
-                    rslt[1] = j;    
-                }
-            //}
+			if(target == (nums[j] + nums[i])){
+				rslt[0] = i;
+				rslt[1] = j;    
+			}
         }
     return rslt;
 }
