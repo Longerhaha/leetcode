@@ -42,12 +42,13 @@ char* longestPalindrome(char* s) {
 
 
 
-//基于动态规划的方法（超出了时间限制）
+//基于动态规划的方法
 //状态方程
 //                        1                           i=j
 //lp[i][j] =        (d[i] == d[j])                    i=j-1
 //            (d[i] == d[j]) && (lp[i+1,j-1])         j-i>1 
 //
+/*
 #define Max(a, b) (a>=b?a:b)
 char* longestPalindrome(char* s) {
     int len = strlen(s);
@@ -77,4 +78,64 @@ char* longestPalindrome(char* s) {
     
     s[maxLen_lp] = 0;
     return s;  
+}*/
+
+//Manacher’s Algorithm
+#define min(a,b) (a>b?b:a)
+//预处理添加#
+char* pre_process(char *s){
+    int len = strlen(s);
+    int i;
+    char *T = (char *)malloc((2*len+1)*sizeof(char));
+    for(i=0; i<len; i++){
+        T[2*i] = '#';
+        T[2*i+1] = s[i];
+    }
+    T[2*len] = '#';
+    return T;
+}
+
+char* longestPalindrome(char* s) {
+    int C=0;
+    int R=0;
+    int i; 
+    int maxP_idx = 0;
+    int maxP = 0;
+    int len = strlen(s);
+    int i_mirror;//当前i关于C的对称点
+    char* T = pre_process(s); //添加#后的字符串
+    int* P = (int *)malloc((2*len+1)*sizeof(int));//存储该位置i字符最大的回文子串长度
+    memset(P, 0, (2*len+1)*sizeof(int));
+    //P[0] = 0;
+    for(i=1; i<(2*len+1); i++){
+        i_mirror = 2*C-i; //i-2*(i-C) = 2*C-i
+        P[i] = (R > i)?(min(R-i, P[i_mirror])):0;
+        //尝试是否可以扩大并防止越上界（特别是原最大搜索范围与现最大算出的搜索范围有交错的时候）
+       while((T[i+1+P[i]] == T[i-1-P[i]]) && ((i+1+P[i])<=2*len)) 
+            P[i]++;
+        //若可以扩大，则更新搜索范围
+        if((i+P[i])>R){
+            C = i;
+            R = i+P[i];
+        }  
+    }
+    //找到具有最大P的点
+    //找到具有最大P的点
+    for(i=0; i<(2*len+1); i++){
+        if(P[i] > maxP){
+            maxP = P[i];
+            maxP_idx = i;  
+        }
+          
+    }
+    //
+    //返回对应的字符串
+    char *ret_s = (char *)malloc((P[maxP_idx]+1)*sizeof(char));
+    for(i=0; i<P[maxP_idx]; i++){
+        ret_s[i] = T[maxP_idx-P[maxP_idx]+1+2*i];
+    }
+    ret_s[i] = 0;
+    free(T);
+    free(P);
+    return ret_s;
 }
