@@ -1,0 +1,85 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+//根据val添加一个链表节点
+struct ListNode* AddNode(int val){
+    struct ListNode* node = (struct ListNode*)malloc(sizeof(struct ListNode));
+    node->val = val;
+    node->next = NULL;
+    return node;
+}
+
+struct ListNode* addTwoNumbers(struct ListNode* l1, struct ListNode* l2) {
+    int carry = 0;//小心进位
+    int i;
+    
+    //处理头
+    struct ListNode* sum_head;//注意不要带空头结点
+    if(9 < (l1->val+l2->val+carry)){
+        sum_head = AddNode(l1->val+l2->val+carry-10);
+        carry = 1;
+    }
+    else{
+        sum_head = AddNode(l1->val+l2->val+carry);
+        carry = 0; 
+    }
+    
+    struct ListNode* temp = sum_head;
+    l1 = l1->next;
+    l2 = l2->next;
+    
+    
+    //处理后续情况
+    while(l1 && l2){
+        if(9 < (l1->val+l2->val+carry)){
+            temp->next = AddNode(l1->val+l2->val+carry-10);
+            carry = 1;
+        }
+        else{
+            temp->next = AddNode(l1->val+l2->val+carry);
+            carry = 0; 
+        }
+        temp = temp->next;
+        l1 = l1->next;
+        l2 = l2->next;
+    }
+    //处理不对称状况，比如
+    //[9,8]
+    //[1]
+    while(l1){
+        if(9 < (l1->val+carry)){
+            temp->next = AddNode(l1->val+carry-10);
+            carry = 1;
+        }
+        else{
+            temp->next = AddNode(l1->val+carry);
+            carry = 0; 
+        }
+        temp = temp->next;
+        l1 = l1->next;
+    }
+    while(l2){
+        if(9 < (l2->val+carry)){
+            temp->next = AddNode(l2->val+carry-10);
+            carry = 1;
+        }
+        else{
+            temp->next = AddNode(l2->val+carry);
+            carry = 0; 
+        }
+        temp = temp->next;
+        l2 = l2->next;
+    }  
+    
+    //最高位如果有进位的话，得多加一个存储节点
+    if(1 == carry)
+       temp->next = AddNode(carry);
+    
+    return sum_head;
+    
+    
+}
