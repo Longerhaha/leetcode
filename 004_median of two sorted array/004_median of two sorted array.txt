@@ -1,0 +1,42 @@
+double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size) {
+    int i1=0,i2=0;
+    
+    int *nums_merge = (int *)malloc((nums1Size+nums2Size)*sizeof(int));//合并两个有序数组后的数组
+    int i_merge = 0;
+    
+    memset(nums_merge, 0, (nums1Size+nums2Size)*sizeof(int));
+    //其中任何一个为空
+    if(0 == nums1Size){
+        if(0 == nums2Size%2) //如果是偶数
+            return (nums2[nums2Size/2]*1.0+nums2[nums2Size/2-1]*1.0)/2;
+        else
+            return nums2[(nums2Size-1)/2]*1.0;
+    }
+    
+    if(0 == nums2Size){
+        if(0 == nums1Size%2) //如果是偶数
+            return (nums1[nums1Size/2]*1.0+nums1[nums1Size/2-1]*1.0)/2;
+        else
+            return nums1[(nums1Size-1)/2]*1.0;
+    }
+    //都不空
+    while((i1<nums1Size) && (i2<nums2Size)){
+        if(nums1[i1] < nums2[i2])
+            nums_merge[i_merge++] = nums1[i1++];
+        else
+            nums_merge[i_merge++] = nums2[i2++];
+    }
+    //一方数据还未遍历到终点
+    while((i1<nums1Size))
+        nums_merge[i_merge++] = nums1[i1++];
+    while((i2<nums2Size))
+        nums_merge[i_merge++] = nums2[i2++];
+    
+    
+    //return nums_merge[2]*1.0; 
+    if(0 == (i_merge%2)) //如果是偶数
+        return (nums_merge[i_merge/2]*1.0+nums_merge[i_merge/2-1]*1.0)/2;
+    else
+        return nums_merge[(i_merge-1)/2]*1.0;
+    
+}
