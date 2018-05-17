@@ -1,0 +1,71 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+/*
+//注意处理头结点与尾巴节点
+//首先要知道链表的长度
+struct ListNode* removeNthFromEnd(struct ListNode* head, int n) {
+    int i;
+    int len_linklist=0;
+    
+    struct ListNode* pre_n_pNode = head;//第n-1个节点指针
+    struct ListNode* n_pNode;//第n个节点指针
+    struct ListNode* post_n_pNode;//第n+1个节点指针
+    //求该链表长度
+    struct ListNode* pTemp = head;
+    while(pTemp){
+        len_linklist++;
+        pTemp = pTemp->next;
+    }
+    //删除第一个元素
+    if(0 == (len_linklist-n))
+        return head->next;
+    
+    for(i=0; i<(len_linklist-n)-1; i++){
+        pre_n_pNode = pre_n_pNode->next; 
+    }
+    n_pNode = pre_n_pNode->next;
+    post_n_pNode = n_pNode->next;
+    pre_n_pNode->next = post_n_pNode;
+    free(n_pNode);
+    return head;
+}*/
+
+
+//进阶 一趟扫描
+//使用两个搜索指针1,2，其间隔n-1，1搜索到尾巴节点后，则删除2后的节点
+struct ListNode* removeNthFromEnd(struct ListNode* head, int n) {
+    int i;
+    int num_search = 0;
+    struct ListNode* search1, *search2, *temp;
+    search1 = search2 = head;
+    while(search1->next){
+        num_search++;
+        search1 = search1->next;
+        if(num_search > n)
+            search2 = search2->next;
+    }
+    
+    //删除的是头结点
+    if(num_search == (n-1)){
+        temp = head;
+        head = head->next;
+        free(temp);
+        if(NULL != temp)
+            temp = NULL;//防止野指针
+        return head;
+    }
+    
+    temp = search2->next;
+    search2->next = temp->next;
+    free(temp);
+    if(NULL != temp)
+        temp = NULL;//防止野指针
+
+    return head;
+}
