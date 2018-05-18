@@ -1,0 +1,18 @@
+#define MIN(a,b) (a>=b?b:a)
+int maxArea(int* height, int heightSize) {
+    int maxArea = 0;
+    int left=0, right=heightSize-1;
+    int area;
+    while(left<right){
+        area = (right-left)*MIN(height[left], height[right]);
+        if(area > maxArea){ //更新最大值
+            maxArea = area;
+        }
+        //更新位置
+        if(height[left]<height[right])
+            left++;
+        else
+            right--;
+    }
+    return maxArea;
+}
