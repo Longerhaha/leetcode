@@ -1,0 +1,13 @@
+bool isPalindrome(int x) {
+    int rev_x = 0;
+    int x_temp = x;
+    
+    if(x<0)
+        return false;
+    while(x){
+        rev_x = rev_x*10 + x%10;
+        x = x/10;
+    }
+    
+    return (rev_x==x_temp);
+}
