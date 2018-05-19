@@ -1,0 +1,52 @@
+int reverse(int x) {
+
+    
+    /*method 1
+    long long rslt = 0;
+    const int MAX_INT = 0x7fffffff;
+    const int MIN_INT = 0x80000000;
+    
+    while(x){
+        rslt = 10*rslt + x%10;     
+        x = x/10;
+    }   
+    
+    if(0 > x)
+        rslt = -rslt;
+    
+    if(rslt > MAX_INT || rslt < MIN_INT)  //overflow
+        rslt = 0;
+    
+    //wrong 
+    //if(rslt > 0x7fffffff || rslt < 0x80000000)  //overflow
+        //rslt = 0;
+    */    
+
+    /*method 2
+    int temp = 0;
+    int rslt = 0;
+    while(x){
+        temp = 10*rslt + x%10;  
+        if(temp/10 == rslt)//not overflow
+            rslt = temp;
+        else
+            rslt = 0;
+        x = x/10;
+    } 
+    
+    return rslt;*/
+    
+    
+    //method 3:fastest example
+    
+    int isPos = x > 0 ? 1 : -1; //whether is x a positive integer
+    int rev_x = 0; // x reversed
+    while(x != 0)
+    {
+        rev_x = rev_x * 10 + (x % 10) * isPos;
+        if(rev_x > 214748364 && x * isPos > 9)
+            return 0;
+        x /= 10;
+    }
+    return isPos * rev_x;
+}
