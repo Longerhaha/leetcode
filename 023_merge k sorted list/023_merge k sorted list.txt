@@ -1,0 +1,83 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+struct ListNode* mergeTwoLists(struct ListNode* l1, struct ListNode* l2) {
+    
+    struct ListNode* head_merge_order_List;
+    
+    if(NULL == l1)
+        return l2;
+    
+    if(NULL == l2)
+        return l1;
+    
+    if(l1->val <= l2->val){
+        head_merge_order_List = l1;
+        head_merge_order_List->next = mergeTwoLists(l1->next, l2);
+    }
+    else{
+        head_merge_order_List = l2;
+        head_merge_order_List->next = mergeTwoLists(l1, l2->next);
+    }  
+    return head_merge_order_List;
+    /*
+    struct ListNode* head_merge_order_List;
+    struct ListNode* tail_merge_order_List;
+    
+    if(NULL == l1)
+        return l2;
+    
+    if(NULL == l2)
+        return l1;
+    
+    if(l1->val <= l2->val){
+        head_merge_order_List = l1;
+        l1 = l1->next;
+    }   
+    else{
+        head_merge_order_List = l2;
+        l2 = l2->next;
+    }
+    
+    tail_merge_order_List = head_merge_order_List;
+    
+    while(l1 != NULL &&  l2 != NULL){
+        if(l1->val <= l2->val){
+            tail_merge_order_List->next = l1;
+            l1 = l1->next;
+            tail_merge_order_List = tail_merge_order_List->next;
+        }
+        else{
+            tail_merge_order_List->next = l2;
+            l2 = l2->next;
+            tail_merge_order_List = tail_merge_order_List->next;
+        }  
+    }
+    
+    if(NULL == l1)
+        tail_merge_order_List->next = l2;
+    if(NULL == l2)
+        tail_merge_order_List->next = l1;
+    
+    return head_merge_order_List;*/
+}
+
+
+struct ListNode* mergeKLists(struct ListNode** lists, int listsSize) {
+    int i,num=listsSize;
+    
+    if(listsSize == 0)
+        return NULL;
+    
+    while(1 != num){
+        for(i=0; i<num/2; i++){
+            lists[i] = mergeTwoLists(lists[i], lists[num-1-i]);
+        }
+        num = num-num/2;
+    }
+    return lists[0];
+}
