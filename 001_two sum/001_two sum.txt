@@ -1,15 +1,236 @@
 /**
  * Note: The returned array must be malloced, assume caller calls free().
  */
+//暴力搜索法
+//时间复杂度O（n^2）
+/*
 int* twoSum(int* nums, int numsSize, int target) {
     int i,j;
     int *rslt = (int *)malloc(2*sizeof(int));
     for(i=0; i<numsSize; i++)
         for(j=i+1; j<numsSize; j++){
-			if(target == (nums[j] + nums[i])){
-				rslt[0] = i;
-				rslt[1] = j;    
-			}
+            //if(nums[j] != nums[i]){//不能重复利用
+                if(target == (nums[j] + nums[i])){
+                    rslt[0] = i;
+                    rslt[1] = j;    
+                }
+            //}
         }
     return rslt;
+}*/
+
+//二叉搜索法
+//时间复杂度O（nlogn）
+
+//哈希表 线性探测
+#define OA_LINEAR 1 	//开放寻址中的线性探测
+
+ 
+
+#define HASH_FUNC OA_LINEAR
+#define TYPE_HASH_IN   int//hash输入类型
+#define TYPE_HASH_KEY  int//hash key类型
+#define TYPE_HASH_KEYVAL  int//hash keyval类型
+#define INIT_KEY (-1)
+#define HASH_ERROR -1
+
+#define PRIMENUM (91)  //散列函数（模运算）中的模
+#define LEN_HASH 200 //哈希表长度
+enum dNode_flag{
+	LEGITIMATE = 0,//合法的
+	EMPTY,//空的
+	DELETED//该节点从字典中被删掉
+};
+//线性探测
+
+int hash_func(TYPE_HASH_IN i){
+	return i%PRIMENUM;
 }
+
+//哈希表的数据节点
+typedef struct dNode* pHashData;
+struct dNode{
+	TYPE_HASH_KEY key;
+	TYPE_HASH_KEYVAL key_val;
+	int flag;//是否加载过数据的标志，删除时该标志保留且数据置为INIT_DATA，
+	         //数据插入时若数据不是MIN_DATA则插入
+}dNode_hash;
+//哈希表管理节点
+typedef struct hNode* pHashTable;
+typedef struct hNode{
+	int size_table;
+	pHashData data;
+}hashTable;
+
+
+/************************************************
+函数名：	hashTable_init
+函数功能：  初始化哈希表
+函数输入：  int 	tableSize   哈希表的长度
+函数输出：  pHashTable 初始化后的哈希表管理节点指针
+*************************************************/
+pHashTable hashTable_init(int tableSize){
+	pHashTable h  = (pHashTable)malloc(sizeof(hashTable));
+	if(NULL == h){
+		//printf("空间溢出！\n");
+	}
+	h->size_table = tableSize;//记录哈希表数据节点数目
+	h->data = (pHashData)malloc(tableSize*sizeof(dNode_hash));
+	if(NULL == h->data){
+		//printf("空间溢出！\n");
+	}
+	int i;
+	//初始化哈希表数据节点
+	for(i=0; i<tableSize; i++){
+		h->data[i].key = INIT_KEY;
+		h->data[i].key_val = -1;//key_val初始化为-1
+		h->data[i].flag = EMPTY;//初始化为空
+	}
+	return h;
+}
+
+/************************************************
+函数名：	hashTable_insert
+函数功能：  往哈希表插入一个数据
+函数输入：  pHashTable 			h       哈希表管理节点指针
+			TYPE_HASH_KEY 		key     插入节点的键
+			TYPE_HASH_KEYVAL    key_val 插入节点的键值
+函数输出：  1 插入成功
+			HASH_ERROR 插入失败
+*************************************************/
+int hashTable_insert(pHashTable h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL key_val){
+	int idx = hash_func(key);
+	int conflict_num = 0;
+	if(LEGITIMATE != (h->data[idx].flag)){//该位置没有被占（包括删除与空状态）
+		h->data[idx].key = key; //写入数据
+		h->data[idx].key_val = key_val;
+		h->data[idx].flag = LEGITIMATE;
+		return 1;//写入成功
+	}
+	else if(h->data[idx].key == key){
+		//printf("key:%d已经在哈希表里面\n",key); 
+		return HASH_ERROR;
+	}	
+	
+	//已经被占有了，即有冲突
+	while(conflict_num < h->size_table){
+		idx = (++idx)%LEN_HASH;//idx+1
+		if(LEGITIMATE != (h->data[idx].flag)){//线性探测，该位置没有被占
+			h->data[idx].key = key; //写入数据
+			h->data[idx].key_val = key_val;
+			h->data[idx].flag = LEGITIMATE;
+			return 1;//写入成功
+		}
+		conflict_num++;
+	}
+	return HASH_ERROR;//插入失败
+}
+
+
+/************************************************
+函数名：	hashTable_search
+函数功能：  根据key查找哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+			TYPE_HASH_KEY 	key     插入节点的键
+函数输出：  查找成功则返回对应的key_val
+			HASH_ERROR 查找失败
+*************************************************/
+int hashTable_search(pHashTable h, TYPE_HASH_KEY key){
+	int idx = hash_func(key);
+	while((h->data[idx].key != key) && (h->data[idx].flag != EMPTY)){
+		idx = (++idx)%LEN_HASH;
+	}
+	if(h->data[idx].key == key) //找到了
+		return h->data[idx].key_val;
+	else //遇见空的地方，也就是没找到
+		return HASH_ERROR;	
+}
+
+/************************************************
+函数名：	hashTable_delete
+函数功能：  根据key查找哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+			TYPE_HASH_KEY 	key     删除节点的键
+函数输出：  1 删除成功
+			HASH_ERROR 删除失败，说明没有该键
+*************************************************/
+int hashTable_delete(pHashTable h, TYPE_HASH_KEY key){
+	int idx = hash_func(key);
+	while((h->data[idx].key != key) && (h->data[idx].flag != EMPTY)){
+		idx = (++idx)%LEN_HASH;
+	}
+	if(h->data[idx].key == key){//找到了该键的位置
+		//初始化
+		h->data[idx].key = INIT_KEY;
+		h->data[idx].key_val = -1;
+		h->data[idx].flag = DELETED;//键标志修改为删除
+        return 1;
+	} 	
+	else //遇见空的地方，也就是没找到
+		return HASH_ERROR;
+}
+/************************************************
+函数名：	hashTable_traverse
+函数功能：  遍历哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输出：  无
+*************************************************/
+void hashTable_traverse(pHashTable h){
+	if((NULL==h) || (0==(h->size_table))){
+		//printf("哈希表为空\n");
+		return ;
+	}
+	//printf("哈希表状态如下\n");	
+	//printf("idx   key  key_val   flag\n");	
+	int i;
+	for(i=0; i<(h->size_table); i++){
+		//printf("%d,    %d,   %d,  %d\n", i, h->data[i].key, h->data[i].key_val, h->data[i].flag);
+	}
+	return ;	
+}
+/************************************************
+函数名：	hashTable_destroy
+函数功能：  删除哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输出：  1 删除成功
+			HASH_ERROR 删除失败
+*************************************************/
+int hashTable_destroy(pHashTable h){
+	//释放哈希表数据节点
+	pHashData temp = h->data;
+	free(temp);
+	if(NULL != temp)
+		temp = NULL;
+	//释放哈希表管理节点
+	free(h);
+	if(NULL != h)
+		h = NULL;
+	return 1;
+}
+
+int* twoSum(int* nums, int numsSize, int target) {
+    int* res = (int *)malloc(2*sizeof(int));
+    memset(res, 0, 2*sizeof(int));
+    
+    pHashData h = hashTable_init(LEN_HASH);
+    int sum1=0, sum2=0, pos=0, i=0;
+    for(i=0; i<numsSize; i++){
+        sum1 = nums[i];
+        sum2 = target-sum1;
+        //if(sum1 == sum2)//重复元素不能利用
+        //    continue;
+        
+        pos = hashTable_search(h, sum2);
+        if(HASH_ERROR == pos){//没有找到
+            hashTable_insert(h, sum1, i);
+        } 
+        else{//找到了
+            res[0] = pos;
+            res[1] = i;
+            return res;
+        }
+        
+    }
+    return res;
+}
+
