@@ -22,29 +22,33 @@ int* twoSum(int* nums, int numsSize, int target) {
 //二叉搜索法
 //时间复杂度O（nlogn）
 
-//哈希表 线性探测
-#define OA_LINEAR 1 	//开放寻址中的线性探测
 
+//使用哈希表（开放寻址 线性探测法）
+//时间复杂度O（n）
+#define OA_LINEAR 1 	//开放寻址中的线性探测
+#define OA_QUADRATIC 2  //开放寻址中的平方探测
+#define OA_DOUBLEHSAH 3 //开放寻址中的双重散列
  
 
-#define HASH_FUNC OA_LINEAR
 #define TYPE_HASH_IN   int//hash输入类型
 #define TYPE_HASH_KEY  int//hash key类型
 #define TYPE_HASH_KEYVAL  int//hash keyval类型
 #define INIT_KEY (-1)
 #define HASH_ERROR -1
 
-#define PRIMENUM (91)  //散列函数（模运算）中的模
-#define LEN_HASH 200 //哈希表长度
+#define PRIMENUM (10001)  //散列函数（模运算）中的模
+#define LEN_HASH 20000
+
+
 enum dNode_flag{
 	LEGITIMATE = 0,//合法的
 	EMPTY,//空的
 	DELETED//该节点从字典中被删掉
 };
-//线性探测
-
+//哈希函数
 int hash_func(TYPE_HASH_IN i){
-	return i%PRIMENUM;
+	int key = i%PRIMENUM;
+    return (key<0?(key+PRIMENUM):key);
 }
 
 //哈希表的数据节点
@@ -62,6 +66,24 @@ typedef struct hNode{
 	pHashData data;
 }hashTable;
 
+/************************************************
+函数名：	NextPrime（暂时没有用到） 
+函数功能：  下一个素数 
+函数输入：  int 	N   要插入哈希表的节点 
+函数输出：  N后的第一个素数 
+************************************************
+int NextPrime( int N )
+{ // 返回大于N且不超过MAXTABLESIZE的最小素数 
+    int i, p = (N%2)? N+2 : N+1; //从大于N的下一个奇数开始 
+ 
+    while( p <= MAXTABLESIZE ) {
+        for( i=(int)sqrt(p); i>2; i-- )
+            if ( !(p%i) ) break; // p不是素数 
+        if ( i==2 ) break; // for正常结束，说明p是素数 
+        else  p += 2; // 否则试探下一个奇数 
+    }
+    return p;
+}*/
 
 /************************************************
 函数名：	hashTable_init
@@ -72,12 +94,12 @@ typedef struct hNode{
 pHashTable hashTable_init(int tableSize){
 	pHashTable h  = (pHashTable)malloc(sizeof(hashTable));
 	if(NULL == h){
-		//printf("空间溢出！\n");
+		printf("空间溢出！\n");
 	}
 	h->size_table = tableSize;//记录哈希表数据节点数目
 	h->data = (pHashData)malloc(tableSize*sizeof(dNode_hash));
 	if(NULL == h->data){
-		//printf("空间溢出！\n");
+		printf("空间溢出！\n");
 	}
 	int i;
 	//初始化哈希表数据节点
@@ -108,7 +130,7 @@ int hashTable_insert(pHashTable h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL key_val){
 		return 1;//写入成功
 	}
 	else if(h->data[idx].key == key){
-		//printf("key:%d已经在哈希表里面\n",key); 
+		printf("key:%d已经在哈希表里面\n",key); 
 		return HASH_ERROR;
 	}	
 	
@@ -164,7 +186,7 @@ int hashTable_delete(pHashTable h, TYPE_HASH_KEY key){
 		h->data[idx].key = INIT_KEY;
 		h->data[idx].key_val = -1;
 		h->data[idx].flag = DELETED;//键标志修改为删除
-        return 1;
+		return 1;
 	} 	
 	else //遇见空的地方，也就是没找到
 		return HASH_ERROR;
@@ -177,14 +199,14 @@ int hashTable_delete(pHashTable h, TYPE_HASH_KEY key){
 *************************************************/
 void hashTable_traverse(pHashTable h){
 	if((NULL==h) || (0==(h->size_table))){
-		//printf("哈希表为空\n");
+		printf("哈希表为空\n");
 		return ;
 	}
-	//printf("哈希表状态如下\n");	
-	//printf("idx   key  key_val   flag\n");	
+	printf("哈希表状态如下\n");	
+	printf("idx   key  key_val   flag\n");	
 	int i;
 	for(i=0; i<(h->size_table); i++){
-		//printf("%d,    %d,   %d,  %d\n", i, h->data[i].key, h->data[i].key_val, h->data[i].flag);
+		printf("%d,    %d,   %d,  %d\n", i, h->data[i].key, h->data[i].key_val, h->data[i].flag);
 	}
 	return ;	
 }
@@ -199,12 +221,8 @@ int hashTable_destroy(pHashTable h){
 	//释放哈希表数据节点
 	pHashData temp = h->data;
 	free(temp);
-	if(NULL != temp)
-		temp = NULL;
 	//释放哈希表管理节点
 	free(h);
-	if(NULL != h)
-		h = NULL;
 	return 1;
 }
 
@@ -217,9 +235,7 @@ int* twoSum(int* nums, int numsSize, int target) {
     for(i=0; i<numsSize; i++){
         sum1 = nums[i];
         sum2 = target-sum1;
-        //if(sum1 == sum2)//重复元素不能利用
-        //    continue;
-        
+
         pos = hashTable_search(h, sum2);
         if(HASH_ERROR == pos){//没有找到
             hashTable_insert(h, sum1, i);
