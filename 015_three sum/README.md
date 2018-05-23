@@ -1,6 +1,6 @@
 # leetcode
 # stick to it everyday and your will be a good algorithm engineer!
-## 001_three sum(三数之和)
+## 015_three sum(三数之和)
 ## 问题描述与输入输出
 
 ### 问题描述
