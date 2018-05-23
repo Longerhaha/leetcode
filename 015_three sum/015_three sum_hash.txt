@@ -1,0 +1,297 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+
+//使用哈希表（开放寻址 线性探测法）
+//时间复杂度O（n^2）
+#define OA_LINEAR 1 	//开放寻址中的线性探测
+#define OA_QUADRATIC 2  //开放寻址中的平方探测
+#define OA_DOUBLEHSAH 3 //开放寻址中的双重散列
+ 
+
+#define TYPE_HASH_IN   int//hash输入类型
+#define TYPE_HASH_KEY  int//hash key类型
+#define TYPE_HASH_KEYVAL  int//hash keyval类型
+#define INIT_KEY (-1)
+#define HASH_ERROR -1
+
+#define PRIMENUM (4001)  //散列函数（模运算）中的模
+#define LEN_HASH 6000
+
+
+enum dNode_flag{
+	LEGITIMATE = 0,//合法的
+	EMPTY,//空的
+	DELETED//该节点从字典中被删掉
+};
+//哈希函数
+int hash_func(TYPE_HASH_IN i){
+	int key = i%PRIMENUM;
+    return (key<0?(key+PRIMENUM):key);
+}
+
+//哈希表的数据节点
+typedef struct dNode* pHashData;
+struct dNode{
+	TYPE_HASH_KEY key;
+	TYPE_HASH_KEYVAL key_val;
+	int flag;//是否加载过数据的标志，删除时该标志保留且数据置为INIT_DATA，
+	         //数据插入时若数据不是MIN_DATA则插入
+}dNode_hash;
+//哈希表管理节点
+typedef struct hNode* pHashTable;
+typedef struct hNode{
+	int size_table;
+	pHashData data;
+}hashTable;
+
+/************************************************
+函数名：	NextPrime（暂时没有用到） 
+函数功能：  下一个素数 
+函数输入：  int 	N   要插入哈希表的节点 
+函数输出：  N后的第一个素数 
+************************************************
+int NextPrime( int N )
+{ // 返回大于N且不超过MAXTABLESIZE的最小素数 
+    int i, p = (N%2)? N+2 : N+1; //从大于N的下一个奇数开始 
+ 
+    while( p <= MAXTABLESIZE ) {
+        for( i=(int)sqrt(p); i>2; i-- )
+            if ( !(p%i) ) break; // p不是素数 
+        if ( i==2 ) break; // for正常结束，说明p是素数 
+        else  p += 2; // 否则试探下一个奇数 
+    }
+    return p;
+}*/
+
+/************************************************
+函数名：	hashTable_init
+函数功能：  初始化哈希表
+函数输入：  int 	tableSize   哈希表的长度
+函数输出：  pHashTable 初始化后的哈希表管理节点指针
+*************************************************/
+pHashTable hashTable_init(int tableSize){
+	pHashTable h  = (pHashTable)malloc(sizeof(hashTable));
+	if(NULL == h){
+		printf("空间溢出！\n");
+	}
+	h->size_table = tableSize;//记录哈希表数据节点数目
+	h->data = (pHashData)malloc(tableSize*sizeof(dNode_hash));
+	if(NULL == h->data){
+		printf("空间溢出！\n");
+	}
+	int i;
+	//初始化哈希表数据节点
+	for(i=0; i<tableSize; i++){
+		h->data[i].key = INIT_KEY;
+		h->data[i].key_val = -1;//key_val初始化为-1
+		h->data[i].flag = EMPTY;//初始化为空
+	}
+	return h;
+}
+
+/************************************************
+函数名：	hashTable_insert
+函数功能：  往哈希表插入一个数据
+函数输入：  pHashTable 			h       哈希表管理节点指针
+			TYPE_HASH_KEY 		key     插入节点的键
+			TYPE_HASH_KEYVAL    key_val 插入节点的键值
+函数输出：  1 插入成功
+			HASH_ERROR 插入失败
+*************************************************/
+int hashTable_insert(pHashTable h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL key_val){
+	int idx = hash_func(key);
+	int conflict_num = 0;
+	if(LEGITIMATE != (h->data[idx].flag)){//该位置没有被占（包括删除与空状态）
+		h->data[idx].key = key; //写入数据
+		h->data[idx].key_val = key_val;
+		h->data[idx].flag = LEGITIMATE;
+		return 1;//写入成功
+	}
+	else if(h->data[idx].key == key){
+		printf("key:%d已经在哈希表里面\n",key); 
+		return HASH_ERROR;
+	}	
+	
+	//已经被占有了，即有冲突
+	while(conflict_num < h->size_table){
+		idx = (++idx)%LEN_HASH;//idx+1
+		if(LEGITIMATE != (h->data[idx].flag)){//线性探测，该位置没有被占
+			h->data[idx].key = key; //写入数据
+			h->data[idx].key_val = key_val;
+			h->data[idx].flag = LEGITIMATE;
+			return 1;//写入成功
+		}
+		conflict_num++;
+	}
+	return HASH_ERROR;//插入失败
+}
+
+
+/************************************************
+函数名：	hashTable_search
+函数功能：  根据key查找哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+			TYPE_HASH_KEY 	key     插入节点的键
+函数输出：  查找成功则返回对应的key_val
+			HASH_ERROR 查找失败
+*************************************************/
+int hashTable_search(pHashTable h, TYPE_HASH_KEY key){
+	int idx = hash_func(key);
+	while((h->data[idx].key != key) && (h->data[idx].flag != EMPTY)){
+		idx = (++idx)%LEN_HASH;
+	}
+	if(h->data[idx].key == key) //找到了
+		return h->data[idx].key_val;
+	else //遇见空的地方，也就是没找到
+		return HASH_ERROR;	
+}
+
+/************************************************
+函数名：	hashTable_delete
+函数功能：  根据key查找哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+			TYPE_HASH_KEY 	key     删除节点的键
+函数输出：  1 删除成功
+			HASH_ERROR 删除失败，说明没有该键
+*************************************************/
+int hashTable_delete(pHashTable h, TYPE_HASH_KEY key){
+	int idx = hash_func(key);
+	while((h->data[idx].key != key) && (h->data[idx].flag != EMPTY)){
+		idx = (++idx)%LEN_HASH;
+	}
+	if(h->data[idx].key == key){//找到了该键的位置
+		//初始化
+		h->data[idx].key = INIT_KEY;
+		h->data[idx].key_val = -1;
+		h->data[idx].flag = DELETED;//键标志修改为删除
+		return 1;
+	} 	
+	else //遇见空的地方，也就是没找到
+		return HASH_ERROR;
+}
+/************************************************
+函数名：	hashTable_traverse
+函数功能：  遍历哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输出：  无
+*************************************************/
+void hashTable_traverse(pHashTable h){
+	if((NULL==h) || (0==(h->size_table))){
+		printf("哈希表为空\n");
+		return ;
+	}
+	printf("哈希表状态如下\n");	
+	printf("idx   key  key_val   flag\n");	
+	int i;
+	for(i=0; i<(h->size_table); i++){
+		printf("%d,    %d,   %d,  %d\n", i, h->data[i].key, h->data[i].key_val, h->data[i].flag);
+	}
+	return ;	
+}
+/************************************************
+函数名：	hashTable_destroy
+函数功能：  删除哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输出：  1 删除成功
+			HASH_ERROR 删除失败
+*************************************************/
+int hashTable_destroy(pHashTable h){
+	//释放哈希表数据节点
+	pHashData temp = h->data;
+	free(temp);
+	//释放哈希表管理节点
+	free(h);
+	return 1;
+}
+//升序
+int cmp_inc (const void *a , const void *b ){ 
+    return (*(int *)a - *(int *)b); 
+} 
+
+//#define res_maxSize 18000
+
+int** threeSum(int* nums, int numsSize, int* returnSize) {
+    int i=0, j=0, idx, num1, num2, num3, num_res=0, zero_num=0;
+    int res_maxSize = numsSize*6;
+    //申请二维指针
+    //printf("numsSize is %d\n", numsSize);
+    int **res = (int**)malloc(sizeof(int*)*(res_maxSize));
+    for(i=0;i<(res_maxSize);i++)    
+        res[i] = (int*)malloc(sizeof(int)*3); 
+    //初始化哈希表
+    pHashData h = hashTable_init(LEN_HASH);
+    //升序排序,有利于重复三元组的判定
+    qsort(nums, numsSize, sizeof(int), cmp_inc);
+    
+    //插入哈希表并记录0的数目
+    for(i=0; i<numsSize; i++){
+        hashTable_insert(h, nums[i], i);
+        if(0 == nums[i])
+            zero_num++;
+    }
+    //查找三数之和
+    for(i=0; i<numsSize-2; i++){
+
+        if(nums[i]>=0)//正数或0则跳出当前循环,原因就是数组已经排序了
+            continue;
+        
+        if(nums[i]==nums[i+1]) { //遇见重复的，比如[-4 2 2], [-4 3 3]
+            if(HASH_ERROR!=hashTable_search(h,-2*nums[i])){
+                if(num_res==0 || (num_res>=1 && num_res<res_maxSize && res[num_res-1][0]!=nums[i])){ //避免连续多个重复的数字造成多次写入
+                    res[num_res][0] = nums[i];
+                    res[num_res][1] = nums[i];
+                    res[num_res][2] = -2*nums[i];
+                    num_res++; 
+                }
+            }  
+            continue;
+        }
+        //获得了有效的i
+        num1 = nums[i];
+        for(j=i+1; j<(numsSize-1); j++){
+            if((nums[j]==nums[j+1])){ //比如{-4，0,2}这种情况 则不能算进去
+                if(0==(num1+2*nums[j])){
+                    if(num_res==0 || (num_res>=1 && num_res<res_maxSize && (res[num_res-1][1]!=nums[j] || res[num_res-1][0]!=nums[i]) )){ //避免连续多个重复的数字造成多次写入
+                        res[num_res][0] = nums[i];
+                        res[num_res][1] = nums[j];
+                        res[num_res][2] = nums[j];
+                        num_res++; 
+                    }
+                }  
+                continue;
+            }
+            
+            num2 = nums[j];
+            num3 = -(num1+num2);
+            if(num3<0)//num3是负数跳出当前循环，原因就是数组已经排序了
+                continue;
+            
+            idx = hashTable_search(h, num3);
+            if(HASH_ERROR != idx){//确保不重复
+                //printf("%d,%d\n",idx,j);
+                if(nums[idx]>num2 && num_res<res_maxSize){
+                    res[num_res][0] = num1;
+                    res[num_res][1] = num2;
+                    res[num_res][2] = num3;
+                    num_res++;  
+                }
+                
+            }
+        }
+            
+    }
+    //处理0
+    if(zero_num>=3 && num_res<res_maxSize){
+        res[num_res][0] = (int)0;
+        res[num_res][1] = (int)0;
+        res[num_res][2] = (int)0;
+        num_res++; 
+    }
+    //返回找到的不重复数据的个数
+    *returnSize = num_res;
+    //返回数据
+    return res;
+}
