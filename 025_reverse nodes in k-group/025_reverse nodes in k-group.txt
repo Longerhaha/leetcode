@@ -1,0 +1,51 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+//反转一组（k个节点）
+struct ListNode* reverseOneGroup(struct ListNode* preTail, struct ListNode* nextHead){
+    struct ListNode *pre, *cur, *next, *ret;
+    ret = pre = preTail->next;
+    cur = pre->next;
+    next = cur->next;
+    while(next != nextHead){//反转到next与nextHead相同
+        cur->next = pre;
+        pre = cur;
+        cur = next;
+        next = next->next;
+    }
+    cur->next = pre;//此时cur所指向的节点还未反转，故添加一次反转操作
+    preTail->next = cur;//上一个的尾巴节点指向cur，当前节点为该组反转的头
+    ret->next = nextHead;//做此操作，为后续反转做好铺垫
+    return ret;
+}
+
+
+struct ListNode* reverseKGroup(struct ListNode* head, int k) {
+    if(NULL == head)//无输入节点
+        return NULL;
+    if(1==k) //不需要反转
+        return head;
+    
+    struct ListNode*preTail, *nextHead, *tmpHead;//preTail是上一个反转链表的尾巴  nextHead是下个要反转链表的头 tmpHead是空头节点
+    tmpHead = (struct ListNode*)malloc(sizeof(struct ListNode)); //建立的空头结点，题目给的head接在该节点后面
+    tmpHead->val = -1;
+    tmpHead->next = head;//空节点指向有效数据的头
+    preTail = tmpHead;//初始化
+    nextHead = head;//初始化
+    int i = 0;
+    while(NULL != nextHead){
+        i++;
+        nextHead = nextHead->next;
+        if(0 == (i%k)){ //k个反转一次
+            preTail = reverseOneGroup(preTail, nextHead);
+            printf("is in\n");
+        }
+
+        printf("%d, %d\n", nextHead, i);
+    }
+    return tmpHead->next;
+}
