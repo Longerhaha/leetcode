@@ -1,0 +1,86 @@
+//标记法 标记该数字出现的位置
+//标记法大量减少了判断该数独是否是有效数独的时间
+//loc[3][9][9] 
+//第一个下标0代表行 1代表列 2代表块
+//第二个下标的值代表着第几行、第几列、第几个块
+//第三个下标比如数字1代表着该数（2）在某第几行、某第几列、某第几块中出现过
+bool loc[3][9][9];
+
+//初始化时设置已知的数组的loc
+void set_loc(char val, int i, int j){
+    int k = (int)(val-'1');
+    loc[0][i][k] = true;
+    loc[1][j][k] = true;
+    loc[2][i/3*3+j/3][k] = true;
+}
+//判断新增的节点是不是合法的
+bool valid_loc(char val, int i, int j){
+    int k = (int)(val-'1');
+    if(loc[0][i][k] || loc[1][j][k] || loc[2][i/3*3+j/3][k]){
+        //之前出现过，不属于数独序列
+        return false;
+    }
+    else{//没有出现过
+        loc[0][i][k] = true;
+        loc[1][j][k] = true;
+        loc[2][i/3*3+j/3][k] = true;
+        return true;
+    } 
+}
+//删去递归失败的loc节点
+void deleteAdded_loc(char val, int i, int j){
+    int k = (int)(val-'1');
+    loc[0][i][k] = false;
+    loc[1][j][k] = false;
+    loc[2][i/3*3+j/3][k] = false;
+}
+
+//先列后行搜索
+bool solveSudoku_DFS(char** board, int i, int j){
+    if(i>8)
+        return solveSudoku_DFS(board, 0, j+1);
+    if(j>8)
+        return true;
+    int k;
+    if(board[i][j] == '.'){
+        for(k=1; k<=9; k++){
+            board[i][j] = (char)(k+'0');
+            if(valid_loc(board[i][j], i, j)){
+                if(solveSudoku_DFS(board, i+1, j))
+                    return true;
+                else
+                    deleteAdded_loc(board[i][j], i, j);
+            }
+            board[i][j] = '.';
+        } 
+        return false;//尝试了所有的可能
+    }
+    else{
+        return solveSudoku_DFS(board, i+1, j);  
+    }
+   
+}
+void TraverseBoard(char** board){
+    int i,j;
+    for(i=0; i<9; i++){
+        for(j=0; j<9; j++){
+            printf("%c  ", board[i][j]);
+            if(j==8)
+                printf("\n");
+        }
+        
+    }
+}
+void solveSudoku(char** board, int boardRowSize, int boardColSize) {
+    int i,j;
+    memset(loc, 0, sizeof(loc));
+    for(i=0; i<boardRowSize; i++){
+        for(j=0; j<boardColSize; j++){
+            if(board[i][j] != '.')
+                set_loc(board[i][j], i, j);
+        }
+    }
+    solveSudoku_DFS(board, 0, 0);
+    //printf("%d\n",solveSudoku_DFS(board, 0, 0)); 
+    //TraverseBoard(board);
+}
