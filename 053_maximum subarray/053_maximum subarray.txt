@@ -1,0 +1,18 @@
+//在线处理
+#define MIN (-2147483647)
+int maxSubArray(int* nums, int numsSize) {
+    int i;
+    if(0 == numsSize)
+        return 0;
+    int thisSum=0, maxSum=MIN;
+    for(i=0; i<numsSize; i++){
+        thisSum += nums[i];//在线处理
+        if(thisSum>maxSum)
+            maxSum = thisSum;
+        
+        if(thisSum <= 0) //对后面判断没有用，舍弃
+            thisSum = 0;
+        
+    }
+    return maxSum;
+}
