@@ -3,7 +3,7 @@ char* convert(char* s, int numRows) {
         return s;
 
     int len_s = strlen(s);
-    char *res = (char *)malloc(len_s*sizeof(char));
+    char *res = (char *)malloc((len_s+1)*sizeof(char));//多申请一个节点
     int i,j,tmp,idx_res=0;
     
     int size = 2*numRows-2;
@@ -18,5 +18,6 @@ char* convert(char* s, int numRows) {
                 res[idx_res++] = s[tmp];
         }
     }
+    res[idx_res] = 0;//字符串尾巴置空
     return res;
 }
