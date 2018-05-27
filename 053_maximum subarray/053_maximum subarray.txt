@@ -1,3 +1,4 @@
+/*
 //在线处理
 #define MIN (-2147483647)
 int maxSubArray(int* nums, int numsSize) {
@@ -14,5 +15,51 @@ int maxSubArray(int* nums, int numsSize) {
             thisSum = 0;
         
     }
+    return maxSum;
+}*/
+
+//分治法
+#define MAX(a,b) ((a)>=(b)?(a):(b))
+#define MIN (-2147483647)
+//求中间子串的最大值
+int midMaxSubArray(int* nums, int start, int mid, int end){
+    int thisSumLeft=0, maxSumLeft = MIN, thisSumRight=0, maxSumRight = MIN;
+    int k;
+    for(k=mid; k>=start; k--){
+        thisSumLeft += nums[k];
+        if(thisSumLeft > maxSumLeft)
+            maxSumLeft = thisSumLeft; 
+    }
+    
+    for(k=mid+1; k<=end; k++){
+        thisSumRight += nums[k];
+        if(thisSumRight > maxSumRight)
+            maxSumRight = thisSumRight;
+    }
+    return (maxSumLeft+maxSumRight);
+}
+//分治
+int divideAndConquer(int* nums, int start, int end){
+    if(start == end){
+        return nums[start];
+    } 
+    //if(1 == (end-start)){
+    //    return MAX(nums[start], nums[end]);
+    //}
+    
+    int mid = (start+end)/2;
+    int left_max, right_max, mid_max;
+    left_max = divideAndConquer(nums, start, mid);
+    right_max = divideAndConquer(nums, mid+1, end);
+    mid_max = midMaxSubArray(nums, start, mid, end);
+    return MAX(MAX(left_max, right_max), mid_max);
+    
+    
+}
+
+int maxSubArray(int* nums, int numsSize) {
+    if(0 == numsSize)
+        return 0;
+    int maxSum = divideAndConquer(nums, 0, numsSize-1);
     return maxSum;
 }
