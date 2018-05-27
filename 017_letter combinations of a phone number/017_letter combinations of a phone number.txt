@@ -1,0 +1,60 @@
+/**
+ * Return an array of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+const char dict[8][4] = {
+    {'a', 'b', 'c', ' '},
+    {'d', 'e', 'f', ' '},
+    {'g', 'h', 'i', ' '},
+    {'j', 'k', 'l', ' '},
+    {'m', 'n', 'o', ' '},
+    {'p', 'q', 'r', 's'},
+    {'t', 'u', 'v', ' '},
+    {'w', 'x', 'y', 'z'}
+};
+
+
+char** letterCombinations(char* digits, int* returnSize) {
+    int len = strlen(digits);
+    if(len == 0)
+        return NULL;
+
+    int *record = (int*)malloc(sizeof(int)*len);//记录该数字digits[i]对应的字母个数
+    int len_result = 1;
+    int i;
+    for(i=0; i<len; i++){
+        if('7'!=digits[i] && '9'!=digits[i]){
+            len_result *= 3;
+            record[i] = 3;
+        }  
+        else{
+            len_result *= 4;
+            record[i] = 4;
+        } 
+    }
+    printf("len_result is %d\n",len_result);
+    char** result = (char**)malloc(sizeof(char*)*len_result);//注意是sizeof(char*)，而不是sizeof(char)
+
+    for(i=0; i<len_result; i++){
+        result[i] = (char*)malloc((len+1)*sizeof(char));
+    }
+    for(i=0; i<len_result; i++){
+        result[i][len] = 0;
+    }
+    int num_circle = len_result;
+    int times_circle = 1;
+    int j,k;
+    for(i=0; i<len; i++){
+        num_circle = num_circle/record[i];
+        times_circle = times_circle*record[i];
+        for(j=0; j<times_circle; j++){
+            for(k=0; k<num_circle; k++){
+                result[k+j*num_circle][i] = dict[(int)(digits[i]-'2')][(j%record[i])];
+                printf("%d, %c, %c\n", k+j*num_circle, result[k+j*num_circle][i], dict[(int)(digits[i]-'2')][(j%record[i])]);
+            }
+        }
+    }
+    *returnSize = len_result;
+    free(record);
+    return result;
+}
