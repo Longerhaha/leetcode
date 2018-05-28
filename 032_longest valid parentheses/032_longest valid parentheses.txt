@@ -1,0 +1,121 @@
+
+/*堆栈方法
+#define type_element int 
+
+typedef struct stack * pStack;
+
+typedef struct stack{
+    type_element data;
+    pStack next;
+}Stack;
+
+pStack stack_init(void){
+    pStack pShead = (pStack)malloc(sizeof(Stack));
+    pShead->data = 0;
+    pShead->next = NULL;
+    return pShead;
+}
+
+int stack_is_empty(pStack head){
+    return (NULL == (head->next));
+}
+
+int stack_push(pStack head, type_element data){
+    
+    pStack pStemp;
+    pStack pSnode = (pStack)malloc(sizeof(Stack));
+    if(NULL == pSnode)
+        return 0;
+    
+    pSnode->data  = data;
+    
+    pStemp = head->next;
+    head->next = pSnode;
+    pSnode->next = pStemp;
+    return 1;
+}
+    
+
+type_element stack_pop(pStack head){
+    type_element head_data = head->next->data;
+    pStack pStemp;
+    pStemp = head->next;
+    head->next = pStemp->next;
+    free(pStemp);
+    return head_data;
+}
+    
+
+type_element stack_top_element(pStack head){
+    if(stack_is_empty(head))
+        return -1;//空栈
+    else
+        return head->next->data;
+}
+
+int stack_len(pStack head){
+    int len = 0;
+    pStack tmp = head;
+    while(tmp->next){
+        len++;
+        tmp = tmp->next; 
+    }
+    return len;
+}
+
+
+#define MAX(a, b) ((a)>=(b)?a:b)
+
+int longestValidParentheses(char* s) {
+    int len = strlen(s);
+    int max_valid_len = 0;
+    int start = 0;
+    pStack head = stack_init();
+    int i;
+    for(i=0; i<len; i++){
+        if(s[i] == '('){
+            stack_push(head, i);//压栈压入的是下标
+        }
+        else{  //')'
+            if(stack_is_empty(head)){
+                start = i+1;
+                printf("start %d\n", start);
+            }
+            else{ //堆栈内有元素，且s[栈顶元素]为'('
+                stack_pop(head);
+                max_valid_len = stack_is_empty(head)?MAX(max_valid_len, (i-start+1)):MAX(max_valid_len, i-stack_top_element(head));
+                printf("%d\n", max_valid_len);
+            }
+        }
+    }
+    //stack_traverse(head);
+    return max_valid_len;
+    
+}*/
+
+//动态规划方法
+//dp[i]表示从s[0]到s[i]包含s[i]的最长的有效匹配括号子串长度
+int longestValidParentheses(char* s) {
+    if(s == NULL || s == "")
+        return 0;
+    
+    int len = strlen(s);
+    int *dp = (int*)malloc(len*sizeof(int));
+    dp[0] = 0;
+    int res = 0;
+    int left = 0;
+    for(int i = 1; i < len; i++)
+    {
+        dp[i] = 0;
+        left = i - dp[i-1] - 1;
+        if(s[i] == ')' && s[left] == '(')
+            dp[i] = dp[i-1] + 2 + (left>0?dp[left-1]:0);
+        
+        res = dp[i]>res?dp[i]:res;
+    }
+    for(int i = 0; i < len; i++){
+        printf("%d ",dp[i]);
+    }
+    printf("\n");
+    return res;
+}
