@@ -31,9 +31,9 @@
 dp[i]表示从s[0]到s[i]包含s[i]的最长的有效匹配括号子串长度，left表示包含s[i-1]最大配对的括号的前一个字符的
 下标（left = i - dp[i-1] - 1），于是
 
-dp[i] == dp[i-1]+2+dp[left] if(s[i] == ')' && s[left] == '('
-      == 0, else
-其中dp[left]=(left>0?dp[left-1]:0)
+	dp[i] == dp[i-1]+2+dp[left] if(s[i] == ')' && s[left] == '('
+		  == 0, else
+	其中dp[left]=(left>0?dp[left-1]:0)
 
 ## 拓展与思考：
 ### 拓展
