@@ -1,0 +1,33 @@
+//动态规划解法
+bool isMatch(char* s, char* p) {
+    int len_s = strlen(s);
+    int len_p = strlen(p);
+    
+    if(0 == len_p && len_s!=0)
+        return false;
+    
+    int i,j;
+
+    bool dp[len_s+1][len_p+1];
+    for(i=0; i<len_s+1; i++)
+        for(j=0; j<len_p+1; j++)
+            dp[i][j] = false;
+    //处理边界
+    dp[0][0] = true;
+    for(j=1; j<len_p+1; j++){
+        if(p[j-1] == '*') 
+            dp[0][j] = dp[0][j-1];
+    }
+
+    for(i=1; i<len_s+1; i++){
+        for(j=1; j<len_p+1; j++){
+            if(p[j-1] != '*'){
+                dp[i][j] = dp[i-1][j-1] && (p[j-1]=='?' || s[i-1]==p[j-1]);
+            }
+            else{//p[j] == '*' 此时j肯定大于等于1
+                dp[i][j] = dp[i][j-1] || dp[i-1][j];    
+            }
+        }
+    }
+    return dp[len_s][len_p];
+}
