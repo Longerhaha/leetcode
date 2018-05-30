@@ -1,6 +1,6 @@
 //dp[i][j]代表s[0,1,2...,i-1]和p[0,1,2,...,j-1]是否匹配
 bool isMatch(char* s, char* p) {
-    /*int len_s = strlen(s);
+    int len_s = strlen(s);
     int len_p = strlen(p);
     
     if(0 == len_p && len_s!=0)
@@ -10,16 +10,11 @@ bool isMatch(char* s, char* p) {
         return false;
     
     int i,j;
-    //申请动态规划内存
-    int** dp = (int**)malloc(sizeof(int*)*(len_s+1));
-    for(i=0; i<len_s+1; i++){
-        dp[i] = (int*)malloc(sizeof(int)*(len_p+1));
-    }
-    //初始化
+
+    bool dp[len_s+1][len_p+1];
     for(i=0; i<len_s+1; i++)
         for(j=0; j<len_p+1; j++)
             dp[i][j] = 0;
-    
     //处理边界
     dp[0][0] = 1;
     for(j=1; j<len_p+1; j++){
@@ -30,43 +25,21 @@ bool isMatch(char* s, char* p) {
     for(i=1; i<len_s+1; i++){
         for(j=1; j<len_p+1; j++){
             if(p[j-1] != '*'){
-                if(p[j-1]=='.' || s[i-1]==p[j-1])
-                    dp[i][j] = dp[i-1][j-1];      
+                dp[i][j] = dp[i-1][j-1] && (p[j-1]=='.' || s[i-1]==p[j-1]);
             }
             else{//p[j] == '*' 此时j肯定大于等于2
-                if(p[j-2]!='.' && (s[i-2]!=p[j-2] || s[i-1]!=s[i-2]))
-                    dp[i][j] = dp[i][j-2];
-                
-                if(p[j-2]!='.' && (s[i-2]!=p[j-2] && s[i-1]==p[j-2]))
-                    dp[i][j] = dp[i-1][j-2];
-                
-                if(p[j-2]=='.' && (i-1>0)){
-                    dp[i][j] = dp[j-2][j-2]; 
-                }
-                else if(p[j-2]!='.' && s[i-1]==p[j-2] && (i-1>0) && s[i-1]==s[i-2]){
-                    if(dp[i-1][j-2]) //"aaa"   "ab*c*a*c*a"
-                        dp[i][j] = dp[i-1][j-2]; 
-                    else
-                        dp[i][j] = dp[i-2][j-2]; 
-                }         
+                dp[i][j] = dp[i][j-2] || dp[i][j-1] || (dp[i-1][j] && (p[j-2]=='.' || s[i-1]==p[j-2]));    
             }
         }
     }
     
-    for(i=0; i<len_s+1; i++){
-        for(j=0; j<len_p+1; j++){
-            printf("%d ", dp[i][j]);
-            if(j==len_p)
-                printf("\n");
-        }
-    }
-    
-    return dp[len_s][len_p]==1;*/
+    return dp[len_s][len_p];
+    /*
     int i, j;  
     int m = strlen(s);  
     int n = strlen(p);  
 
-    /** 
+    //
      * b[i + 1][j + 1]: if s[0..i] matches p[0..j] 
      * if p[j] != '*' 
      * b[i + 1][j + 1] = b[i][j] && s[i] == p[j] 
@@ -76,7 +49,7 @@ bool isMatch(char* s, char* p) {
      * 2) "x*" repeats 1 time and matches x: b[i + 1][j] 
      * 3) "x*" repeats >= 2 times and matches "x*x": s[i] == x && b[i][j + 1] 
      * '.' matches any single character 
-     */  
+     //  
     bool b[m + 1][n + 1];  
     b[0][0] = true;  
     for (i = 0; i < m; i++) {  
@@ -98,5 +71,5 @@ bool isMatch(char* s, char* p) {
             }  
         }  
     }  
-    return b[m][n]; 
+    return b[m][n];*/ 
 }
