@@ -1,0 +1,44 @@
+/**
+ * Return an array of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+void generate_dfs(char** data, int* p_idx, int left, int right, int n){
+    //printf("%d, %d, %d, %d\n", *p_idx, left, right, n);
+    if(left >= n){
+        while(right < n)
+            data[*p_idx][left+(right++)] = ')';
+        strncpy(data[*p_idx+1], data[*p_idx], 2*n);//先拷贝当前串到下一个串，这样子下一个遍历才知道他的头是什么
+        //否则p_idx指向的值加1，下一个串不知道他前面的那些是什么
+        *p_idx = *p_idx+1;
+        return ;
+    }
+    //左边递归
+    data[*p_idx][left+right] = '(';
+    generate_dfs(data, p_idx, left+1, right, n);
+    //右边递归
+    if(left>right){
+        data[*p_idx][left+right] = ')';
+        generate_dfs(data, p_idx, left, right+1, n); 
+    }
+    return ;
+}
+
+char** generateParenthesis(int n, int* returnSize) {
+    char** ans = (char**)malloc(sizeof(char*)*5000); 
+    int i, j;
+    for(i=0; i<5000; i++){
+        ans[i] = (char*)malloc(sizeof(char)*(2*n+1));
+    }
+    for(i=0; i<5000; i++){
+        for(j=0; j<(2*n+1); j++){
+            ans[i][j] = 0;
+        }
+    }
+    
+    int ans_size = 0;
+    generate_dfs(ans, &ans_size, 0, 0, n);//深度遍历
+    printf("size is %d\n", ans_size);
+    *returnSize = ans_size;
+    return ans;
+}
