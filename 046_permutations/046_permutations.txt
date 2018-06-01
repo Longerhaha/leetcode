@@ -1,0 +1,54 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+
+//使用基于交换的递归方法做
+//所有可能的全排列的数目是n!
+
+void swap(int *d1, int *d2){
+    int tmp;
+    tmp = *d1;
+    *d1 = *d2;
+    *d2 = tmp;
+}
+//dfs_idx递归时递归到nums数组的下标
+void permute_dfs(int** data, int* nums, int numsSize, int* pRow, int dfs_idx){
+    //终止条件 
+    if(dfs_idx == numsSize-1){
+        //printf("%d, %d\n", *pRow, dfs_idx);
+        memcpy(data[*pRow], nums, numsSize*sizeof(int));
+        *pRow += 1;
+        return ;
+    }
+    
+    for(int i=dfs_idx; i<numsSize; i++){
+        //先交换元素，再递归，递归结束后记得还原
+        swap(nums+dfs_idx, nums+i);
+        permute_dfs(data, nums, numsSize, pRow, dfs_idx+1);
+        swap(nums+dfs_idx, nums+i);
+    }
+   
+}
+
+int** permute(int* nums, int numsSize, int* returnSize) {
+    int ans_vecNum = 1;
+    for(int i=2; i<=numsSize; i++)
+        ans_vecNum *= i;
+    //printf("ans_vecNum is %d\n", ans_vecNum);
+    int** ans = (int**)malloc(sizeof(int*)*ans_vecNum); 
+    int i, j;
+    for(i=0; i<ans_vecNum; i++){
+        ans[i] = (int*)malloc(sizeof(int)*(numsSize+1));
+    }
+    for(i=0; i<ans_vecNum; i++){
+        for(j=0; j<(numsSize+1); j++){
+            ans[i][j] = 0;
+        }
+    }
+    int row = 0;
+    permute_dfs(ans, nums, numsSize, &row, 0);
+    *returnSize = ans_vecNum;
+    return ans;
+}
