@@ -1,0 +1,70 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+#define MAX_MALLOC 50000
+
+/*
+ * 该函数实现两个数据的交换
+*/
+void swap(int* a, int* b){
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+/** 
+ * 基于交换的深度优先递归方法
+ * 交换的条件是二者的数据不同才交换，以此避免重复的全排列的出现
+ * data : 返回不重复的全排列的二维数据
+ * nums : 当前递归的数字序列
+ * numsSize ：递归数字序列的长度
+ * data_vecIdx ：当前递归数字序列的全排列的下标，每递归一次全排列后加一
+ * swap_idx： 当前被交换者数据的下标
+ */ 
+void permuteUnique_dfs(int** data, int* nums, const int numsSize, int* data_vecIdx, int swap_idx){
+    /*
+    当交换到最后一个数据时，这个时候就是一个全排列,拷贝数据到data[*data_vecIdx]，同时*data_vecIdx加1。
+    否则继续交换递归，即当二者数据不一样时则交换，然后递归，并恢复之前的顺序；二者数据一样时则跳过
+    */
+    if(swap_idx == numsSize-1 ){
+        data[*data_vecIdx] = (int*)malloc(sizeof(int)*numsSize);
+        if(data[*data_vecIdx] == NULL){ /*对malloc进行检查*/
+            printf("malloc data[%d] error!", *data_vecIdx);
+            return ;
+        }
+        /*内存分配成功*/
+        memcpy(data[*data_vecIdx], nums, numsSize*sizeof(int));
+        *data_vecIdx += 1;
+        return ;
+    }
+    else{
+        for(int i=swap_idx; i<numsSize; i++){
+            if(swap_idx==i || (i>0 && nums[i]!=nums[i-1] && nums[swap_idx]!=nums[i])){
+                swap(nums+swap_idx, nums+i);
+                permuteUnique_dfs(data, nums, numsSize, data_vecIdx, swap_idx+1);
+                swap(nums+swap_idx, nums+i);
+            }
+        }
+    }
+ 
+}
+
+/*
+* 用于qsort函数的升序比较函数
+*/
+int cmp_inc (const void *a , const void *b ){ 
+    return (*(int *)a - *(int *)b); 
+}
+
+
+
+int** permuteUnique(int* nums, int numsSize, int* returnSize) {
+    int** ans = (int**)malloc(sizeof(int*)*MAX_MALLOC);//不重复的全排列的二维数据
+    int ans_vecLen = 0;
+    //升序排序,有利于重复三元组的判定
+    qsort(nums, numsSize, sizeof(int), cmp_inc);
+    
+    permuteUnique_dfs(ans, nums, numsSize, &ans_vecLen, 0);
+    *returnSize = ans_vecLen;
+    return ans;
+}
