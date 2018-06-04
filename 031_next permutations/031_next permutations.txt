@@ -1,0 +1,55 @@
+
+
+/*用与两个数交换*/
+void swap(int* a, int *b){
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+/*反转一个数组的数据*/
+void reverse(int* nums, int start, int end){
+    for(int i=0; i<(end-start+1)/2; i++){
+        swap(nums+start+i, nums+end-i);
+    }
+}
+/*
+* 用于qsort函数的升序比较函数
+*/
+int cmp_inc (const void *a , const void *b ){ 
+    return (*(int *)a - *(int *)b); 
+}
+
+/*求字典序的下一个排列
+ *与全排列不同，若要求下一个排列需要从底到顶
+1. Find the largest index k such that nums[k] < nums[k + 1]. If no such index exists, the permutation is sorted in descending order,
+just reverse it to ascending order and we are done. For example, the next permutation of [3, 2, 1] is [1, 2, 3].
+2. Find the largest index l greater than k such that nums[k] < nums[l].
+3. Swap the value of nums[k] with that of nums[l].
+4. Reverse the sequence from nums[k + 1] up to and including the final element nums[nums.size() - 1].
+*/
+void nextPermutation(int* nums, int numsSize) {
+    if(0==numsSize || 1==numsSize)
+        return ;
+    //步骤1 找到nums[k] < nums[k + 1]的最大k值
+    int k = -1;
+    for(int i=0; i<numsSize-1; i++){
+        if(nums[i] < nums[i+1])
+            k = i;
+    }
+    //如果是-1，说明数据本身就是逆序了
+    if(k==-1){
+        reverse(nums, 0, numsSize-1);
+        return ;
+    }
+    //步骤2 找到最大的下标l使得nums[k] < nums[l]
+    int l=k;
+    for(int i=k+1; i<numsSize; i++){
+        if(nums[i] > nums[k])
+            l = i;
+    }
+    //步骤三 交换k与l
+    swap(nums+k, nums+l);
+    //步骤四
+    reverse(nums, k+1, numsSize-1);
+}
+
