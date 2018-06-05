@@ -1,0 +1,101 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+/*
+ * 求两个数相减后的绝对值
+ */
+#define abs(a-b) ((a-b)>=0?(a-b):(b-a))
+
+/*
+ * 基于子集树的回溯法的限界函数
+ * 皇后彼此不能攻击，所以他们不能处在同一行、列或者对角线上
+ * 判断处于位置(solve_row，Q_mat[solve_row])的点是否是皇后可以安置的点
+ */
+int boudary(int* Q_mat, int solve_row){
+    if(0 == solve_row)  //第一行的任何位置认为无冲突
+        return 1;
+    
+    for(int i=0; i<solve_row; i++){
+        if(Q_mat[i]==Q_mat[solve_row] || abs(Q_mat[solve_row]-Q_mat[i])==(solve_row-i)) //行列冲突或者处在同一对角线上
+            return 0;
+    }
+    return 1;
+}
+
+/*
+ * 基于子集树的回溯法的解决方案
+ * 思路：按行添加皇后的位置，每添加一个位置首先判断在当前位置(solve_row，Q_mat[solve_row])是不是合法的。
+ *      若是合法的则判断是否当前行已经到了最后一行，若是最后一行则记录所有皇后的位置
+ *      否则递归，继续寻找下一行可以放置的合法的位置
+ *
+ * data用于存储解决方案的三维指针
+ * Q_mat是存储皇后二维位置的数组，其中二维位置为(solve_row，Q_mat[solve_row])
+ * numSize是棋盘的大小（numSize*numSize）
+ * num_solve当前寻找的第num_solve解决方案
+ * solve_row查找当前行可以放置皇后的位置
+ *
+ */
+void backTrack_subsetTree(char*** data, int* Q_mat, int numSize, int* num_solve, int solve_row){
+    for(int i=0; i<numSize; i++){    
+        Q_mat[solve_row] = i;
+        if(boudary(Q_mat, solve_row)){ //第(i,j)位置的Queen是合法的
+            if(solve_row == numSize-1){ // 找到了n 皇后问题的一种解决方案
+                data[*num_solve] = (char**)malloc(sizeof(char*)*numSize);
+                if(NULL == data[*num_solve]){
+                    //内存申请失败
+                    printf("malloc data[%d] error!\n", *num_solve);
+                    return ;
+                }
+                else{
+                    //printf("Queen slove plan is %d\n", *num_solve);
+                    for(int k=0; k<numSize; k++){
+                        data[*num_solve][k] = (char*)malloc(sizeof(char)*(numSize+1));
+                    }
+                    for(int k=0; k<numSize; k++){
+                        int l;
+                        for(l=0; l<numSize; l++){
+                            data[*num_solve][k][l] = '.';
+                        }
+                        data[*num_solve][k][l] = 0;//打印结束字符'\0'
+                    }
+                    for(int k=0; k<numSize; k++){
+                        data[*num_solve][k][Q_mat[k]] = 'Q';
+                    }
+                    
+                    *num_solve += 1;
+                    return ;
+                }
+            }
+            else{//非最后一行，递归继续寻找下一行可以放置的合法的位置
+                backTrack_subsetTree(data, Q_mat, numSize, num_solve, solve_row+1);
+            }
+        }      
+    }
+}
+
+/*
+ * 基于子集树的回溯法的N皇后解决方案
+ */
+char*** solveNQueens(int n, int* returnSize) {
+    /*初始化数组
+    a[row] = col，表示皇后在第row行第col列
+    */
+    int* Q = (int*)malloc(sizeof(int)*n);
+    if(Q == NULL)
+        printf("initial Q_mat error!\n");
+    for(int row=0; row<n; row++)
+        Q[row] = 0;
+    
+    char*** res = (char***)malloc(sizeof(char**)*1000);//返回的三维数据指针
+    int num_solve = 0;//合法方案的数目
+    int solve_row = 0;//从第0行开始查找合法位置
+    
+    backTrack_subsetTree(res, Q, n, &num_solve, solve_row);//基于子集树递归查找合法的解决方案
+    
+    *returnSize = num_solve;//返还给OJ平台的合法方案的数目
+    
+    free(Q);//释放掉申请的空间
+    
+    return res;
+}
