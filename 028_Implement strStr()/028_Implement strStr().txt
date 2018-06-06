@@ -1,0 +1,29 @@
+/*
+ *字符串处理实现strStr()
+ *思路：对每个位置检测，检测从它开始的nLen位置的数据，如果符合则返回该位置
+ *
+*/
+
+int strStr(char* haystack, char* needle) {
+    int hLen = strlen(haystack);
+    int nLen = strlen(needle);
+    
+    /*needle是空字符串*/
+    if(0 == nLen)
+        return 0;
+    /*needle长度大于haystack*/
+    if(nLen > hLen)
+        return -1;
+      
+   for(int i = 0 ; i <= hLen-nLen; i++){  
+        int flag = 1; //为1代表进入了搜查区域
+        for(int j=0 ; j<nLen; j++) {  //需要往后的每个数据都对
+            if(haystack[i+j] != needle[j]) {  
+                flag =0;  
+                break;  
+            }  
+        }  
+        if(flag) return i;  
+    }  
+    return -1;   
+}
