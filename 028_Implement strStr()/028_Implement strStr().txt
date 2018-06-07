@@ -1,9 +1,19 @@
 /*
- *字符串处理实现strStr()
- *思路：对每个位置检测，检测从它开始的nLen位置的数据，如果符合则返回该位置
+* 算法定义
+*
+*/
+enum algorithm{
+    NAIVE, KMP
+};
+#define ALGORITHM_SELECT KMP //选择的算法类别
+
+#if(ALGORITHM_SELECT == NAIVE)
+/*
+ *朴素字符串匹配算法实现strStr()
+ *算法时间复杂度为O((n-1-m)m)
+ *思路：对每个位置检测，检测从它开始到其之后nLen位置的数据，如果符合则返回该位置
  *
 */
-
 int strStr(char* haystack, char* needle) {
     int hLen = strlen(haystack);
     int nLen = strlen(needle);
@@ -27,3 +37,85 @@ int strStr(char* haystack, char* needle) {
     }  
     return -1;   
 }
+#elif(ALGORITHM_SELECT == KMP)
+/*
+ *KMP算法实现strStr()
+ *《next 数组》是《最大长度表》数据整体向右移1个单位，舍去溢出位置（超出数组的位置）并对缺失位置（数组第一个位置）补充-1
+ *比如：最大长度表    0 0 0 0 1 2 3
+        next 数组 -1 0 0 0 0 1 2
+ *求next数组
+ *思路：k=next[j]
+ *     若 needle[k] == next[j]，则k=k+1，同时j往后走，注意要分needle[j]是否与needle[next[j]]相等去给needle[j]定值
+ *     若 needle[k] != next[j]，则递归next[k]去找最小匹配
+ *
+ */
+void get_next(const char needle[], int* next){
+    int k=-1;
+    int nLen = sizeof(needle);
+    int j = 0;
+    while(j<nLen){
+        //k==-1或者二者匹配
+        if(k==-1 || needle[k]==needle[j]){
+            k++;
+            j++;
+            /*如果needle[j] = needle[ next[j] ]，必然导致后一步匹配失败（因为needle[j]已经跟haystack[i]失配，然后你还用跟needle[j]等同的值needle[next[j]]去跟haystack[i]匹配，很显然，必然失配*/
+            next[j] = needle[next[j]]==needle[k] ? next[k]:k;
+        }
+        else{
+            k = next[k];
+        }
+    }
+}
+
+/*
+ *KMP算法实现strStr()
+ *算法时间复杂度为O(n+m)
+ *思路：先求needle字符串的next指针，然后使用i遍历haystack（不回溯），j遍历needle
+ *     在每个当前i和j判断是否匹配，若不匹配根据next指针调整j(j=next[j])，
+ *     若匹配则判断是否是最大匹配
+ */
+int strStr(char* haystack, char* needle) {
+    int i=0;//使用i遍历haystack（不回溯）
+    int j=0;//j遍历needle,j并根据next[j]调整
+    int nLen = sizeof(needle);
+    int hLen = sizeof(haystack);
+    
+    /*needle是空字符串*/
+    if(0 == nLen)
+        return 0;
+    /*needle长度大于haystack*/
+    if(nLen > hLen)
+        return -1;
+    
+    //根据nLen申请next的空间
+    int* next = (int*)malloc(sizeof(int)*nLen);
+    if(NULL == next){
+        printf("malloc next array error!\n");
+        return -1;
+    }
+    else
+        memset(next, 0, sizeof(int)*nLen);
+    //获取needle的next数组
+    get_next(needle, next);
+    for(i=0; i<nLen; i++){
+         //当前位置是匹配的
+        if(j==-1 || haystack[i]==needle[j]){
+            if(j == nLen-1)//找到了最大匹配
+                break;
+            else
+                continue;//继续匹配
+        }
+        else
+        {
+            j = next[j];//更新j而不是更新i
+        }
+    }
+    free(next);
+    //未找到最大匹配
+    if(i>=nLen)
+        return -1;
+    else
+        return i;
+}
+
+#endif
