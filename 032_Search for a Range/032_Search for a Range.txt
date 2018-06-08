@@ -1,0 +1,65 @@
+/**
+ * Return an array of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+/*
+ * 二分查找target
+ */
+void binary_search(const int* nums, const int numsSize, int* range, const int target, int start, int end){
+    //返回条件
+    if(end == start){
+        if(nums[start] == target){
+            //更新下标
+            if(range[0] == numsSize)//第一次找到
+                range[0] = start;
+            else if(range[1] == -1)//第二次找到
+                range[1] = start;
+            else{//第n(n>=3)次找到
+                range[0] = start<range[0]?start:range[0];
+                range[1] = end>range[1]?end:range[1];
+            }
+        }
+        return ;
+    }
+    
+    int mid = (end+start)/2;//以中间划分
+    //printf("%d, %d, %d, %d\n", start, mid, mid+1, end);
+    binary_search(nums, numsSize, range, target, start, mid);//递归左路
+    binary_search(nums, numsSize, range, target, mid+1, end);//递归右路
+}
+
+/*
+ * 题目要求复杂度为O(log n)且数组是有序的，所以采用二分查找
+ */
+int* searchRange(int* nums, int numsSize, int target, int* returnSize) {
+    //申请存储范围下标的连续内存
+    int* range = (int*)malloc(sizeof(int)*2);
+    if(NULL == range){
+        printf("malloc range error!\n");
+        return NULL;
+    }
+    
+    *returnSize = 2;//返回的长度
+    if(0 == numsSize){
+        memset(range, -1, sizeof(int)*2);
+        return range;
+    }
+    
+    /*给range初始化，保证他们在二分查找里面一旦找到可以更新
+    * 递归里面的判断是：与target相等的时候，若下标比range[0]小，则更新range[0]为该下标 
+    *                  与target相等的时候，若下标比range[1]大，则更新range[1]为该下标 
+    */
+    range[0] = numsSize;
+    range[1] = -1;
+    
+    binary_search(nums, numsSize, range, target, 0, numsSize-1);//进行二分查找
+    
+    /*说明数据里面没有target这个数*/
+    if(range[0] == numsSize)//一个数也没有
+        range[0] = -1;
+    else if(range[1] == -1)//只有一个数
+        range[1] = range[0];
+    
+    return range;
+}
