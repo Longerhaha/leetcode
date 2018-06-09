@@ -1,0 +1,64 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+
+
+/*
+ * 该函数用于交换两个数据
+ */
+void swap(char *d1, char *d2){
+    char tmp;
+    tmp = *d1;
+    *d1 = *d2;
+    *d2 = tmp;
+}
+/*
+ * 使用基于交换的深度优先递归方法
+ * data：递归所产生的全排列数据头指针（二维）
+ * nums：递归时的数据数组
+ * numsSize： 数据数组的大小
+ * pRow：当前正在递归的全排列个数
+ * dfs_idx：当前正在递归的全排列的数据的下标
+ * k:第 k 个排列
+ */
+void permute_dfs(char** data, char* nums, const int numsSize, int* pRow, int dfs_idx){
+    //终止条件 
+    if(dfs_idx == numsSize-1){ //找到一个全排列
+        //printf("%d, %d\n", *pRow, dfs_idx);
+        data[*pRow] = (char*)malloc(sizeof(char)*(numsSize+1));
+        memcpy(data[*pRow], nums, numsSize*sizeof(char));
+        data[*pRow][numsSize] = '\0';
+        *pRow += 1;
+        return ;
+    }
+    
+    for(int i=dfs_idx; i<numsSize; i++){
+        //先交换元素，再递归，递归结束后记得还原
+        swap(nums+dfs_idx, nums+i);
+        permute_dfs(data, nums, numsSize, pRow, dfs_idx+1);
+        swap(nums+dfs_idx, nums+i);
+    }
+   
+}
+
+//使用基于交换的递归方法
+//所有可能的全排列的数目是n!
+char* getPermutation(int n, int k) {
+    int ans_vecNum = 1;
+    for(int i=2; i<=n; i++)
+        ans_vecNum *= i;
+    //printf("ans_vecNum is %d\n", ans_vecNum);
+    char** ans = (char**)malloc(sizeof(char*)*ans_vecNum); 
+    if(NULL == ans){
+        printf("malloc ans error!\n");
+    }
+    char* nums = (char*)malloc(sizeof(char)*n);
+    for(int i=1; i<=n; i++)
+        nums[i-1] = (char)(i+'0');
+
+    int row = 0;
+    permute_dfs(ans, nums, n, &row, 0);
+    return ans[k];
+}
