@@ -1,0 +1,32 @@
+/*
+ * 使用动态规划算法
+ * dp[i][j]表示grid[0][0]到grid[i][j]的路径数目
+ * 每次只能向下或者向右移动一步
+ * dp[i][j] = obstacleGrid[i][j]==1?0:(dp[i-1][j]*(1-obstacleGrid[i-1][j])+dp[i][j-1]*(1-obstacleGrid[i][j-1]));
+ */
+int uniquePathsWithObstacles(int** obstacleGrid, int obstacleGridRowSize, int obstacleGridColSize) {
+    int dp[obstacleGridRowSize][obstacleGridColSize];
+    //根据规则（每次只能向下或者向右移动一步）边界初始化
+    dp[0][0] = 1-obstacleGrid[0][0];
+    //第一行初始化
+    for(int i=1; i<obstacleGridColSize; i++)
+        dp[0][i] = dp[0][i-1]==0?0:(1-obstacleGrid[0][i]);
+    //第一列初始化
+    for(int j=1; j<obstacleGridRowSize; j++)
+        dp[j][0] = dp[j-1][0]==0?0:(1-obstacleGrid[j][0]);
+    
+    for(int i=1; i<obstacleGridRowSize; i++){
+        for(int j=1; j<obstacleGridColSize; j++){
+            dp[i][j] = obstacleGrid[i][j]==1?0:(dp[i-1][j]*(1-obstacleGrid[i-1][j])+dp[i][j-1]*(1-obstacleGrid[i][j-1]));
+        }
+    } 
+    /*
+    for(int i=0; i<obstacleGridRowSize; i++){
+        for(int j=0; j<obstacleGridColSize; j++){
+            printf("%d ", dp[i][j]);
+            if(j == obstacleGridColSize-1)
+                printf("\n");
+        }
+    }*/
+    return dp[obstacleGridRowSize-1][obstacleGridColSize-1];
+}
