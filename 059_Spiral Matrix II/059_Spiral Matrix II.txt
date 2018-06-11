@@ -1,0 +1,62 @@
+/**
+ * Return an array of arrays.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+/*
+ * 螺旋矩阵II
+ * 采用的方法就是沿外圈往内，一层一层描绘螺旋矩阵
+ * 比如n=3时
+ * （1）先描绘外圈如下：
+ * 1 2 3
+   8   4
+   7 6 5
+ * （2）然后描绘次外圈
+ * 1   2   3
+     -----
+   8 | 9 | 4
+     ----- 
+   7   6   5
+   （3）如此反复循环，直到最里面一圈
+ */
+int** generateMatrix(int n) {
+    /*
+    * 申请内存空间
+    */
+    int** spiral_mat = (int**)malloc(sizeof(int*)*n);
+    if(NULL == spiral_mat){
+        printf("malloc spiral_mat memory error!\n");
+    }
+    
+    for(int i=0; i<n; i++){
+        spiral_mat[i] = (int*)malloc(sizeof(int)*n);
+        if(NULL == spiral_mat){
+            printf("malloc spiral_mat[%d] memory error!\n", i);
+        }
+    }
+    
+    int num = 1;
+    /*
+     * 一圈一圈往内描绘
+     * i=0 最外圈，i=1 次外圈， i=(n+1)/2内圈
+     * 把圈分为四个部分
+     *         （上行）
+     *        ----------
+     *        |        |
+     * (左列) |        |（右列）
+     *        ----------
+     *        （下行）
+     */
+    for(int i=0; i<(n+1)/2; i++){
+        printf("%d\n", num);
+        for(int j=i; j<=n-1-i; j++)//当前圈的上行
+            spiral_mat[i][j] = num++;
+        for(int k=i+1; k<=n-i-2; k++)//当前圈的右列
+            spiral_mat[k][n-1-i] = num++;
+        for(int m=n-1-i; m>=i && num<=n*n; m--)//当前圈的下行，注意最后一个圈此时若无num<=n*n则最内圈（只有一个点）会被覆盖成n*n+1的值
+            spiral_mat[n-1-i][m] = num++;
+        for(int l=n-i-2; l>=i+1; l--)//当前圈的左列
+            spiral_mat[l][i] = num++;
+    }
+    return spiral_mat;
+}
