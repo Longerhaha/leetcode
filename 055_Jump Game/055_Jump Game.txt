@@ -1,0 +1,25 @@
+/*
+ * 注意可以往左跳也可以往右跳，以起点为初始起点。
+ * 贪心算法，每一次都选取最大的跳跃距离
+ * 求跳跃最大距离，如果跳跃最大距离大于等于numsSize-1，则说明能够跳到终点
+ * 注意本题可以往左跳跃也可以往右跳跃，在求最大跳跃距离时只要往右跳即可
+ */
+
+bool canJump(int* nums, int numsSize) {
+    //if(numsSize == 1)
+    //   return true;
+    /*
+     * 初始化最大跳跃距离
+     */
+    int maxJump = nums[0];
+    /*
+     * 轮询更新最大跳跃距离
+     */
+    for(int i=0; i<=numsSize-1 && maxJump>=i; i++){
+        //if(nums[i]==0 && i>=maxJump) //如果当前有个大于maxJump的堵塞口
+        //    return i==(numsSize-1)?true:false;//若当前i是最后一个位置则说明可以到达，否则达到不了
+        if(i+nums[i] > maxJump)  
+            maxJump = i+nums[i];
+    }
+    return maxJump>=(numsSize-1)?true:false;
+}
