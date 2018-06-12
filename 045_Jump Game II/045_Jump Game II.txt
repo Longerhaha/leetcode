@@ -1,0 +1,33 @@
+/*
+ * 贪心算法
+ * 在第一次跳跃范围内找第二次可以跳跃的最远地方
+ * 在第二次跳跃范围内找第三次可以跳跃的最远地方
+ * ...以此类推
+ * 直至可以跳到最后一点
+ * 默认是可以达到最后一个位置
+ */
+int jump(int* nums, int numsSize) {
+    if(1 == numsSize)
+        return 0;
+    /*
+     * minStep用来记录最小跳跃次数
+     * curMaxJump记录最远跳跃距离
+     * preMaxJump记录第minStep+1次跳跃的最远位置
+     *
+     */
+    int curMaxJump = 0;
+    int preMaxJump = 0;
+    int minStep = 0;
+    for(int i=0; i<numsSize-1; i++){
+        if(i+nums[i] > curMaxJump){
+            curMaxJump = i+nums[i];
+        }
+        if(i == preMaxJump){ //第minStep+1次跳跃搜索完毕
+            minStep++;
+            preMaxJump = curMaxJump;//记录minStep+1次跳跃的最远距离
+            if(preMaxJump >= numsSize-1)//如果可以跳出去，则直接跳出
+                break;
+        }
+    } 
+    return minStep;
+}
