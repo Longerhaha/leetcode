@@ -1,0 +1,74 @@
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+#define MIN(a, b) (a>=b?b:a)
+/*
+ * 螺旋矩阵
+ * 采用的方法就是沿外圈往内，一层一层读出数据至行矢量中
+ * 比如n=3时
+ * （1）先描绘外圈如下：
+ * 1 2 3
+   8   4
+   7 6 5
+ * （2）然后描绘次外圈
+ * 1   2   3
+     -----
+   8 | 9 | 4
+     ----- 
+   7   6   5
+   （3）如此反复循环，直到最里面一圈
+ */
+int* spiralOrder(int** matrix, int matrixRowSize, int matrixColSize) {
+    /*
+     * 申请数组内存空间
+     */
+    int* spiralVector = (int*)malloc(sizeof(int)*matrixRowSize*matrixColSize);
+    if(NULL == spiralVector){
+        printf("malloc spiralVector memory error!\n");
+        return NULL;
+    }
+    
+    /*
+     * 空或者一行或者一列，直接拷贝行或列
+     */
+    if(NULL == matrix)
+        return NULL;
+    
+    if(1 == matrixRowSize){
+        memcpy(spiralVector, matrix[0], sizeof(int)*matrixColSize);
+        return spiralVector;
+    }
+
+    if(1==matrixColSize){
+        for(int i=0; i<matrixRowSize; i++)
+            spiralVector[i] = matrix[i][0];
+        return spiralVector;
+    }
+    //输出spiral行向量的下标
+    int spiralVector_idx = 0;    
+    /*
+     * 一圈一圈往内读取数据放入spiralVector
+     * i=0 最外圈，i=1 次外圈， i=(MIN(matrixRowSize, matrixColSize)+1)/2最内圈
+     * 把圈分为四个部分
+     *         （上行）
+     *        ----------
+     *        |        |
+     * (左列) |        |（右列）
+     *        ----------
+     *        （下行）
+     */
+    for(int i=0; i<(MIN(matrixRowSize, matrixColSize)+1)/2; i++){
+        //printf("%d\n", spiralVector_idx);
+        for(int j=i; j<=matrixColSize-1-i; j++)//当前圈的上行
+            spiralVector[spiralVector_idx++] = matrix[i][j];
+        for(int k=i+1; k<=matrixRowSize-i-2; k++)//当前圈的右列
+            spiralVector[spiralVector_idx++] = matrix[k][matrixColSize-1-i];
+        for(int m=matrixColSize-1-i; m>=i && spiralVector_idx<matrixRowSize*matrixColSize; m--)//当前圈的下行，注意最后一个圈此时若无num<=n*n则最内圈（只有一个点）会被覆盖成matrixRowSize*matrixColSize+1的值
+            spiralVector[spiralVector_idx++] = matrix[matrixRowSize-1-i][m];
+        for(int l=matrixRowSize-i-2; l>=i+1; l--)//当前圈的左列
+            spiralVector[spiralVector_idx++] = matrix[l][i];
+    }
+    //printf("%d\n", spiralVector_idx);
+    return spiralVector;
+}
