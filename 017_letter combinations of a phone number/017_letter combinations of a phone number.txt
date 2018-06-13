@@ -2,23 +2,35 @@
  * Return an array of size *returnSize.
  * Note: The returned array must be malloced, assume caller calls free().
  */
-const char dict[8][4] = {
-    {'a', 'b', 'c', ' '},
-    {'d', 'e', 'f', ' '},
-    {'g', 'h', 'i', ' '},
-    {'j', 'k', 'l', ' '},
-    {'m', 'n', 'o', ' '},
-    {'p', 'q', 'r', 's'},
-    {'t', 'u', 'v', ' '},
-    {'w', 'x', 'y', 'z'}
+/*
+ * 电话号码的字典
+ */
+const char* dict[8] = {
+    "abc",
+    "def",
+    "ghi",
+    "jkl",
+    "mno",
+    "pqrs",
+    "tuv",
+    "wxyz"
 };
-
+/*
+ * 深度优先遍历（代码简洁）或者循环（代码较多）都可以做
+ * 这里采用循环，相对较快，因为len_result可能很大，深度优先遍历递归的代价太大
+ * len_result记录输出的长度
+ * record[i]记录第i+1个数字对应的字母个数可能性（3或者4）
+ * num_circle是分成的大部分数
+ * times_circle是第i次的大部分数里面的次部分数
+ */
 
 char** letterCombinations(char* digits, int* returnSize) {
     int len = strlen(digits);
     if(len == 0)
         return NULL;
-
+    /*
+     * 记录输出长度与各个数字对应的字母个数可能性
+     */
     int *record = (int*)malloc(sizeof(int)*len);//记录该数字digits[i]对应的字母个数
     int len_result = 1;
     int i;
@@ -32,29 +44,76 @@ char** letterCombinations(char* digits, int* returnSize) {
             record[i] = 4;
         } 
     }
-    printf("len_result is %d\n",len_result);
+    //printf("len_result is %d\n",len_result);
+    /*
+     * 申请内存空间
+     * 每行多申请一个节点放置字符串结束符'\0'供后台打印
+     */
     char** result = (char**)malloc(sizeof(char*)*len_result);//注意是sizeof(char*)，而不是sizeof(char)
-
-    for(i=0; i<len_result; i++){
-        result[i] = (char*)malloc((len+1)*sizeof(char));
+    if(NULL == result){
+        printf("malloc result memory error!\n");
+        return NULL;
     }
-    for(i=0; i<len_result; i++){
-        result[i][len] = 0;
+    char **p = NULL; 
+    for(p=result; p<result+len_result; p++){
+        p[0] = (char*)malloc((len+1)*sizeof(char));//这里需要多申请一个
+        if(NULL == p[0]){
+            printf("malloc result[%d] memory error!\n", i);
+            return NULL;
+        }
     }
+    for(i=0; i<len_result; i++){//这里需要对多申请的一个位置放置字符串结束符'\0'
+        result[i][len] = '\0';
+    }
+    
+    /*
+     * 深度优先遍历或者循环都可以做
+     * 这里采用循环，相对较快，因为len_result可能很大，深度优先遍历递归的代价太大
+     * 从头到尾遍历数字
+     * 比如输入"23"：
+     *     输出长度为9
+     *     (1)首先遍历2，record[0]=3,也就是9行的第一个字符分成3部分，num_circle=3，times_circle=3,num_circle的每个部分的字符一样
+     *          times_circle = 1  ['a',未知]
+     *          times_circle = 1  ['a',未知]
+     *          times_circle = 1  ['a',未知]
+     *          times_circle = 2  ['b',未知]
+     *          times_circle = 2  ['b',未知]
+     *          times_circle = 2  ['b',未知]
+     *          times_circle = 3  ['c',未知]
+     *          times_circle = 3  ['c',未知]
+     *          times_circle = 3  ['c',未知]
+     *     (2)其次遍历3，record[1]=3,num_circle=1, times_circle=9,也就是9行的第二个字符分成9部分，每隔3部分的字符一样，于是采用了j%record[i]
+     *          times_circle = 1  ['a', 'd']
+     *          times_circle = 2  ['a', 'e']
+     *          times_circle = 3  ['a', 'f']
+     *          times_circle = 4  ['b', 'd']
+     *          times_circle = 5  ['b', 'e']
+     *          times_circle = 6  ['b', 'f']
+     *          times_circle = 7  ['c', 'd']
+     *          times_circle = 8  ['c', 'e']
+     *          times_circle = 9  ['c', 'f'] 
+     */
     int num_circle = len_result;
     int times_circle = 1;
     int j,k;
     for(i=0; i<len; i++){
-        num_circle = num_circle/record[i];
-        times_circle = times_circle*record[i];
+        num_circle = num_circle/record[i];//num_circle是第i次的大部分数
+        times_circle = times_circle*record[i];//times_circle是第i次的大部分数里面的次部分数
         for(j=0; j<times_circle; j++){
             for(k=0; k<num_circle; k++){
-                result[k+j*num_circle][i] = dict[(int)(digits[i]-'2')][(j%record[i])];
-                printf("%d, %c, %c\n", k+j*num_circle, result[k+j*num_circle][i], dict[(int)(digits[i]-'2')][(j%record[i])]);
+                result[k+j*num_circle][i] = dict[(int)(digits[i]-'2')][(j%record[i])];//下标引用比较浪费时间，但是可读性强
+                //printf("%d, %c, %c\n", k+j*num_circle, result[k+j*num_circle][i], dict[(int)(digits[i]-'2')][(j%record[i])]);
             }
         }
     }
+    /*
+     * 返回输的长度
+     */
     *returnSize = len_result;
+    /*
+     * 释放record内存空间
+     */
     free(record);
     return result;
+
 }
