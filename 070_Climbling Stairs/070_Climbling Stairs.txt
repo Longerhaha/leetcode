@@ -1,0 +1,22 @@
+/*
+ * 明显F(n) = F(n-1)+F(n-2)
+ * 转而该问题成为求解斐波那契数列
+ * F(1) = 1;
+ * F(2) = 2;
+ * 若用递归做，浪费太多不必要的运算
+ * 这里采用动态规划算法
+ * dp[i]代表达到台阶i+1的不同方法
+ */
+int climbStairs(int n) {
+    int dp[n];
+    memset(dp, 0, n*sizeof(int));
+    if(n==1 || n==2){
+        return n==1?1:2;
+    }
+    int *p = dp;
+    dp[0] = 1;
+    dp[1] = 2;
+    for(p=dp+2; p<dp+n; p++)
+        *p = *(p-1)+*(p-2);
+    return dp[n-1];
+}
