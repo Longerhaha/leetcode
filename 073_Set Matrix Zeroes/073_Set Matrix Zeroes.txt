@@ -1,0 +1,44 @@
+/*
+ * 使用额外空间复杂度为O（m+n）的解决方案
+ * row_zero记录行是否有0
+ * clo_zero记录列是否有0
+ * 根据row_zero行置0
+ * 根据clo_zero列置0
+ * 
+ * 使用额外空间复杂度为O（1）的解决方案
+ * row_zero空间换成matrix的第一列空间,即matrix[0][0],matrix[1][0]....,matrix[matrixRowSize-1][0]（为0才置0，否则不动，即保持原数据）
+ * row_zero空间换成matrix的第一行空间,即matrix[0][0],matrix[0][1]....,matrix[0][matrixColSize-1]（为0才置0，否则不动，即保持原数据）
+ * 根据row_zero行置0
+ * 根据clo_zero列置0
+ */
+void setZeroes(int** matrix, int matrixRowSize, int matrixColSize) {
+    int row_zero[matrixRowSize];
+    int clo_zero[matrixColSize];
+    memset(row_zero, 0, matrixRowSize*sizeof(int));
+    memset(clo_zero, 0, matrixColSize*sizeof(int));
+    /*寻找有0的行、列*/
+    for(int i=0; i<matrixRowSize; i++){
+        for(int j=0; j<matrixColSize; j++){
+            if(matrix[i][j] == 0){
+                //printf("%d %d", i, j);
+                row_zero[i] = 1;
+                clo_zero[j] = 1;
+            }
+        }
+    } 
+    /*行置0*/
+    for(int i=0; i<matrixRowSize; i++){
+        if(row_zero[i]){
+            for(int j=0; j<matrixColSize; j++)
+                matrix[i][j] = 0;
+        }
+    }
+    /*列置0*/
+    for(int j=0; j<matrixColSize; j++){
+        if(clo_zero[j]){
+            for(int i=0; i<matrixRowSize; i++)
+                matrix[i][j] = 0;
+        }
+    }
+    
+}
