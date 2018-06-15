@@ -1,0 +1,59 @@
+/**
+ * Definition for an interval.
+ * struct Interval {
+ *     int start;
+ *     int end;
+ * };
+ */
+/**
+ * Return an array of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+
+
+/*
+ * 本题数据是结构体
+ * 按结构体的start排序
+ * qsort的排序函数
+ */
+int cmp_inc (const void *intervals1 , const void *intervals2 ){ 
+    return (((struct Interval *)intervals1)->start - ((struct Interval *)intervals2)->start); 
+} 
+
+/*
+ * 1、题目没有说区间是有序的（测试样例卡有序），所以我们需要先排序
+ * 2、开始合并区间，合并原则：如果可以合并，选取二者区间左边最小值，右边最大值
+ *                         如果不可以合并，跳过，即p++, retSize++;   
+ */
+
+struct Interval* merge(struct Interval* intervals, int intervalsSize, int* returnSize) {
+    if(0 == intervalsSize)
+        return NULL;
+    int retSize = 0;
+    /*
+     * 申请返回的存储空间
+     */
+    struct Interval* ret_ans = (struct Interval*)malloc(sizeof(struct Interval)*(intervalsSize+1));
+    if(NULL == ret_ans){
+        printf("malloc ret_ans memory error!\n");
+        return NULL;
+    }
+    //排序
+    qsort(intervals, intervalsSize, sizeof(struct Interval), cmp_inc);
+
+    struct Interval* p = intervals;
+    while(p < intervals+intervalsSize){
+        //printf("%d, %d ", p, intervals+intervalsSize);
+        memcpy(ret_ans+retSize, p, sizeof(struct Interval));
+        //可以合并则合并，不可以合并跳过
+        while((p+1)<intervals+intervalsSize && ret_ans[retSize].end>=(p+1)->start){
+            ret_ans[retSize].start = ret_ans[retSize].start<(p+1)->start?ret_ans[retSize].start:(p+1)->start;//二者区间左边最小值
+            ret_ans[retSize].end = ret_ans[retSize].end>(p+1)->end?ret_ans[retSize].end:(p+1)->end;//二者区间右边最大值
+            p++;
+        }
+        p++, retSize++;   
+    }
+    
+    *returnSize = retSize;
+    return ret_ans;
+}
