@@ -1,0 +1,62 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+
+/*
+ * 对链表进行单次旋转
+ */
+struct ListNode* rotateRightOne(struct ListNode* head){
+    /*
+     * 没有数据或者只有一个数据
+     */
+    if(NULL==head || NULL==head->next)
+        return head;
+ 
+    struct ListNode* head_tmp = head;//记录头，以便反转
+    struct ListNode* ahead_last;//记录最后第二个节点
+    struct ListNode* last;//记录最后一个节点
+    //跳到最后第二个节点
+    while(NULL != head->next->next){
+        head = head->next;
+    }
+    //记录最后第二个节点与最后一个节点
+    ahead_last = head;
+    last = ahead_last->next;
+    
+    //旋转
+    last->next = head_tmp;
+    head->next = NULL;
+    
+    return last;
+}
+
+/*
+ * 求链表的长度
+ */
+int linklist_size(struct ListNode* head){
+    int k=0;
+    //跳到最后第二个节点
+    while(head){
+        head = head->next;
+        k += 1;
+    }
+    return k;
+}
+/*
+ * 先求链表的长度
+ * 然后旋转k%len次链表
+ */
+struct ListNode* rotateRight(struct ListNode* head, int k) {
+    int len = linklist_size(head);
+    if(len == 0)
+        return head;
+    
+    for(int i=0; i<k%len; i++)
+        head = rotateRightOne(head);
+    return head;
+}
