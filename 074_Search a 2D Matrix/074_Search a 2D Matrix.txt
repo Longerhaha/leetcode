@@ -1,0 +1,100 @@
+#define MAX(a, b) (a>=b?a:b)
+/*
+ * 二分定位行
+ */
+int binary_locateRow(int** data, int start, int end, int target){
+    int mid = (start+end)/2;
+    /*
+     * 递归结束的条件要分成两个，可能start=end,也可能end-start=1
+     * start=end: 
+     *          比如[1;7;10],查找6
+     *          第一轮start=0, end=2, mid=1 
+     *               此时6<7,往左走
+     *          第二轮start=0, end=0, mid=0
+     *               此时1<6,返回0
+     * end-start=1:
+     *          比如[1;7;10],查找8
+     *          第一轮start=0, end=2, mid=1 
+     *               此时7<8,往右走
+     *          第二轮start=1, end=2, mid=1
+     *               此时7<8,返回1
+     * 上述两种情况都可以归纳于对最后[data[start], data[end]]区间的判断
+     * 如果target区间在[data[end], +inf],则返回end
+     * 如果target区间在[data[start], data[end]),则返回start
+     * 如果target区间在(-inf, data[start]),则返回-1(代表所有数都比它大)
+     */
+    if(end-start<=1){
+        if(data[end][0] <= target) //在最后一行第一个数的外面（左闭有开）
+            return end;
+        else if(data[start][0]<=target)//
+            return start;
+        else
+            return -1;
+    }
+    /*
+     * 二分定位行
+     * 比如[1;7;10]
+     * 查找的数是6，则要返回0（即数据的第一行）
+     *
+     * 如果比中间小，则肯定是我们要返回的行在[start, mid-1]
+     *     等于中间，则直接返回该行
+     *     大于中间，则行在[mid, end]
+     */
+
+    if(data[mid][0] > target) 
+        return binary_locateRow(data, start, mid-1, target);
+    else if(data[mid][0] == target)
+        return mid;
+    else
+        return binary_locateRow(data, mid, end, target);
+
+}
+
+/*
+ * 二分定位列
+ * 定位了行后，问题就转化为一维的二分查找
+ */
+int binary_locateCol(int** data, int row, int start, int end, int target){
+    int mid = (start+end)/2;
+    if(start == end){
+        return data[row][start]==target?start:-1;//-1就说明在该行没有找到
+    }
+    //比中间小就往左走，等于中间返回mid，大于中间往右走
+    if(data[row][mid] > target)
+        return binary_locateCol(data, row, start, mid, target);
+    else if(data[row][mid] == target)
+        return mid;
+    else
+        return binary_locateCol(data, row, mid+1, end, target);
+
+}
+
+
+/*
+ * 首先二分定位行，然后二分定位列
+ * 算法的时间复杂度为O(logm)+O(logn)=O(log(mn))
+ */
+
+bool searchMatrix(int** matrix, int matrixRowSize, int matrixColSize, int target) {
+    if(0==matrixRowSize || 0==matrixColSize)
+        return false;
+    
+    /*
+     * 定位行
+     * -1代表没有找到，因为矩阵所有数据都比target大
+     */
+    int locateRow = binary_locateRow(matrix, 0, matrixRowSize-1, target);
+    printf("%d\n", locateRow);
+    if(-1 == locateRow)
+        return false;
+    /*
+     * 定位列
+     * -1代表没有找到
+     */
+    int locateCol = binary_locateCol(matrix, locateRow, 0, matrixColSize-1, target);
+    if(-1 == locateCol)
+        return false;
+    
+    printf("%d\n", locateCol);
+    return true;
+}
