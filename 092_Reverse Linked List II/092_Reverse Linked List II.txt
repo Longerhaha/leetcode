@@ -1,0 +1,63 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+/*
+ * 1、记录翻转部分链表的头（加入一个空头节点相对较容易操作）
+ * 2、使用三个指针pre, cur, next翻转
+ * 3、待翻转部分的未翻转时头指向翻转部分的后一个节点，翻转部分的前一个节点指向该翻转部分翻转后的头
+ */
+struct ListNode* reverseBetween(struct ListNode* head, int m, int n) {
+    int i=0;
+    /*
+     * 如果不需要旋转（m==n）或者头结点为空
+     */
+    if(m==n || NULL==head)
+        return head;
+    
+    /*
+     * 搭建一个空头结点
+     */
+    struct ListNode* emptyHead = (struct ListNode*)malloc(sizeof(struct ListNode));
+    if(NULL == emptyHead){
+        printf("malloc emptyHead memory error!\n");
+        return NULL;
+    }
+    emptyHead->val = -1;
+    emptyHead->next = head;
+    /*
+     * 先找到第m个链表节点的前一个节点
+     */
+    struct ListNode* tmpHead = emptyHead;
+    while(i<m-1){
+        tmpHead = tmpHead->next;
+        i++;
+    }
+    /*
+     * 翻转m到n位置的链表
+     */
+    struct ListNode* pre = tmpHead->next;
+    struct ListNode* cur = pre->next;
+    struct ListNode* next = cur->next;
+    
+    i=0;
+    while(i<(n-m-1)){
+        cur->next = pre;
+        i++;
+        pre = cur;
+        cur = next;
+        next = next->next;
+    }
+    cur->next = pre;
+    /*
+     * 翻转部分的原来的头指向翻转部分的后一个节点
+     * 翻转部分的前一个节点指向该翻转部分的头
+     */
+    tmpHead->next->next = next;
+    tmpHead->next = cur;
+    
+    return emptyHead->next;
+}
