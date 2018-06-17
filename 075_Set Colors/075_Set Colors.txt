@@ -1,0 +1,61 @@
+/*
+ * 两趟扫描算法:
+ *     第一趟：记录0、1、2的个数
+ *     第二趟：根据0、1、2的个数重写当前数组
+ *
+ * 一趟扫描算法：
+ *     三个指针，i, j, k分别指向最后的0, 1, 2
+ * 
+ */
+
+
+//enum ALGORITHM_TAG{
+//    ONE_SCAN = 1, TWO_SCAN 
+//};
+#define ONE_SCAN (1)
+#define TWO_SCAN (2)
+#define SELECT_ALGO 1
+
+//两趟扫描算法
+#if(SELECT_ALGO == TWO_SCAN)
+    void sortColors(int* nums, int numsSize) {
+        int zero_num = 0, one_num = 0, two_num = 0;
+        //第一趟扫描记录0、1、2的个数
+        for(int i=0; i<numsSize; i++){
+            if(0 == nums[i])
+                zero_num++;
+            else if(1 == nums[i])
+                one_num++;
+            else
+                two_num++;
+        }
+        //第二趟：根据0、1、2的个数重写当前数组
+        for(int i=0; i<zero_num; i++)
+            nums[i] = 0;
+        for(int i=zero_num; i<zero_num+one_num; i++)
+            nums[i] = 1;
+        for(int i=zero_num+one_num; i<numsSize; i++)
+            nums[i] = 2;
+    }
+
+#elif(SELECT_ALGO == ONE_SCAN)
+    //一趟扫描算法：
+    void sortColors(int* nums, int numsSize) {
+        int i = -1, j = -1, k = -1;//三个指针，i, j, k分别指向最后的0, 1, 2
+        printf("%d %d\n", nums[0], nums[1]);
+        for(int l=0; l<numsSize; l++){
+            if(0 == nums[l]){
+                nums[++k] = 2;
+                nums[++j] = 1;
+                nums[++i] = 0;
+                //printf("%d %d\n", nums[0], nums[1]);
+            }
+            else if(1 == nums[l]){
+                nums[++k] = 2;
+                nums[++j] = 1;
+            }
+            else
+                nums[++k] = 2;
+        }
+    }
+#endif
