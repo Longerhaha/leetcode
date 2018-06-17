@@ -1,0 +1,105 @@
+#define MIN(a, b) (a>=b?b:a)
+/*
+ * 深度递归
+ * ans是组合结果二维数据的指针
+ * nums是包含待组合数据的数组头结点指针
+ * n是包含待组合数据的数组的长度
+ * k是从n个里面选取k个数进行组合
+ * p_cnt_ans记录组合个数的指针
+ * high是递归时的深度，最高层为0层，往下不断递加
+ * pre_size是上一层递归的数的大小
+ * 比如本题(有剪枝)：
+ *
+ * high=0:     1           2            3
+ *             |           |            |
+ *          -------     -------      -------
+ *          |  |  |        |  |            |
+ * high=1:  2  3  4        3  4            4
+ *
+ *       剪枝：下一级递归从上一级的数据+1，递归到上一层递归最大递归数据加1
+ * high=k时：
+ *       直接复制数据
+ */
+void combine_dfs(int** ans, int* nums, int n, int k, int* p_cnt_ans, int high, int pre_size){
+    /*
+     * 递归结束条件
+     * high==k时高度足够，于是递归结束
+     */
+    if(high == k){
+        //memcpy(ans[*p_cnt_ans], nums, k*sizeof(int));
+        for(int i=0; i<k; i++)
+            ans[*p_cnt_ans][i] = nums[i];
+        *p_cnt_ans += 1;
+        return ;
+    }
+    /*
+     * 剪枝：下一级递归从上一级的数据+1，递归到上一层递归最大递归数据加1
+     */
+    for(int i=pre_size+1; i<=n-k+1+high; i++){
+        nums[high] = i;
+        combine_dfs(ans, nums, n, k, p_cnt_ans, high+1, i);
+    }
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** combine(int n, int k, int** columnSizes, int* returnSize) {
+    /*
+     * 计算 C(n, k)
+     * 注意其对称性
+     */
+    int k_turn = MIN(k, n-k);
+    int c_up = 1;
+    for(int i=n; i>n-k_turn; i--)
+        c_up *= i;
+    int c_down = 1;
+    for(int i=1; i<=k_turn; i++)
+        c_down *= i;
+    int ret_size;
+    *returnSize = (ret_size = c_up/c_down);
+    //printf("ret_size is %d\n", ret_size);
+    /*
+     * 申请组合数据的内存空间
+     */
+    int** ans = (int**)malloc(sizeof(int*)*ret_size);
+    if(NULL == ans){
+        printf("malloc ans memory error!\n");
+        return NULL;
+    }
+    for(int i=0; i<ret_size; i++){
+        ans[i] = (int*)malloc(sizeof(int)*k);
+        if(ans[i] == NULL){
+            printf("malloc ans[%d] memory error!\n", i);
+        }
+    }
+
+    /*
+     * 申请columnSizes的内存空间
+     * columnSizes是一个指向一维数组的指针
+     * columnSizes所指向的数组的长度都是k
+     */
+    *columnSizes=(int *)malloc(sizeof(int)*ret_size);
+    if(columnSizes == NULL){
+        printf("malloc columnSizes memory error!\n");
+        return NULL;
+    }
+    for(int i=0; i<ret_size; i++){
+        (*columnSizes)[i] = k;
+    }
+    /*
+     * 基于深度递归求解
+     */
+    int cnt_ans = 0;
+    int nums[n];
+    
+    combine_dfs(ans, nums, n, k, &cnt_ans, 0, 0);
+    if(cnt_ans != ret_size){
+        printf("ret_size is %d, cnt_ans is %d\n", ret_size, cnt_ans);
+    }
+    
+    *returnSize = ret_size;
+    return ans;
+}
