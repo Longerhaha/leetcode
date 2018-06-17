@@ -1,0 +1,85 @@
+char* minWindow(char* s, char* t) {
+    //存储各字符出现的个数的字典
+    int dict_t[256] = {0};
+    
+    int len_s = strlen(s);
+    int len_t = strlen(t);
+        
+    //1.首先记录t中的字母的个数
+    for(int i=0; i<len_t; i++)
+        dict_t[(int)t[i]] += 1;
+    /* 
+     * 2.一次遍历
+     * start记录最小覆盖子串的起始位置
+     * end记录最小覆盖子串的结束位置
+     * min_window记录最小覆盖子串的窗口大小
+     * num_s记录字符出现的次数
+     *
+     * 有效字符：若字符串s的字符在t中出现且不超过t中该字符出现的个数则为有效字符
+     *
+     * 过程：每次统计s中的字符个数和有效字符，一旦有效字符与t中的字符个数相等时，则进行判断。
+     *      判断：（1）首先跳过无效字符和多余有效字符，即更新start
+     *            （2）计算窗口，如果窗口比上一个窗口小，则更新end位置
+     *            （3）抛弃该窗口的第一个有效字符，继续查找下一个窗口
+     *
+     */
+    
+    int start = -1, end = len_s-1, min_window = len_s+1;//初始化
+    int num_s[256] = {0};//记录字符s[i]出现的次数
+    int valid_s_character = 0;
+    
+    for(int i=0; i<len_s; i++){
+        //记录字符的个数
+        num_s[(int)s[i]]++;
+        //如果存在s[i]且个数小于t中的个数
+        if(0 < dict_t[(int)s[i]] && num_s[(int)s[i]] <= dict_t[(int)s[i]])
+            valid_s_character++;
+            
+        /*
+         * 如果有效字符达到len_t就可以进行判断了
+         * 每次判断是否该覆盖子串窗口的长度是否比上一个窗口小，若小则更新start, end, 和最小窗口长度
+         * 判断后去掉第一个字符，有效字符减1，然后继续查找下一个窗口 
+         */
+        if(valid_s_character == len_t){
+            //从下个字符开始
+            start += 1;
+            //跳过无效字符和多余无效字符
+            while(start < i && num_s[(int)s[start]] > dict_t[(int)s[start]]){
+                num_s[(int)s[start]]--;
+                start++;
+            }
+            //更新窗口
+            if(i-start+1 < min_window){
+                end = i;
+                min_window = end-start+1;
+                
+            }
+            //printf("%d %d %d\n", start, end, min_window);
+            //抛弃min_window开头的字符， 开始寻找下一个窗口 
+            num_s[(int)s[start]]--, valid_s_character--;
+        } 
+    }
+    
+
+    /* 
+     * 找到了窗口, end的位置是正确的，但是start位置不一样是争取的
+     * 所以拷贝的时候从end拷贝，不要从start拷贝
+     */
+    if(min_window < len_s+1){
+        char* min_win_str = (char *)malloc(sizeof(char)*(min_window+1)); 
+        if(NULL == min_win_str){
+            printf("malloc min_win_str memeory error!\n");
+            return "-1";
+        }
+        else{
+            strncpy(min_win_str, s+(end-min_window)+1, min_window);
+            min_win_str[min_window] = '\0';//凑成字符串
+            return min_win_str;
+        }
+    } 
+    //没有找到窗口    
+    else{
+        return "";
+    } 
+        
+}
