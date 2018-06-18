@@ -5,7 +5,34 @@
  *     struct ListNode *next;
  * };
  */
-//反转一组（k个节点）
+/* 
+ * K个一组反转链表
+ * preTail
+ * nextHead（可能反转也可能不反转）
+ *  
+ * ret指向该反转链表反转后的尾巴，即该反转链表的头
+ * pre指向反转链表的第一个节点
+ * cur指向反转链表的第二个节点
+ * next指向反转链表的第三个节点
+ *
+ * 反转规则：当next不是下一个反转链表的头，则反转cur所指向的节点，即cur->next = pre，然后整体又移一个节点，直到next与nextGroupHead相等。
+ *
+ * 例子：  tmpHead(临时空头节点)  -> 1 -> 2 -> 3 -> 4
+ *        preTail=tmpHead，因为是两个一组反转，所以nextHead为第三个节点的指针，即数据3的指针。
+ *        tmpHead(临时空头节点)  -> 1   ->   2   ->   3   ->   4
+ *                                pre      cur      next
+ *        1、next与nextHead相等，直接跳出大循环
+ *        2、tmpHead  -> 1   ->   2   ->   3   ->   4 
+ *
+ *                      pre  <-  cur <-|   next  <-|
+ *                       |             |           |
+ *                       --------------|------------
+ *                   preTail -----------
+ *           第一次反转后变成：
+ *               tmpHead  -> 2   ->   1   ->   3   ->   4  
+ *           继续反转3,4：
+ *               tmpHead  -> 2   ->   1   ->   4   ->   3  
+ */ 
 struct ListNode* reverseOneGroup(struct ListNode* preTail, struct ListNode* nextHead){
     struct ListNode *pre, *cur, *next, *ret;
     ret = pre = preTail->next;
@@ -32,8 +59,13 @@ struct ListNode* reverseKGroup(struct ListNode* head, int k) {
     
     struct ListNode*preTail, *nextHead, *tmpHead;//preTail是上一个反转链表的尾巴  nextHead是下个要反转链表的头 tmpHead是空头节点
     tmpHead = (struct ListNode*)malloc(sizeof(struct ListNode)); //建立的空头结点，题目给的head接在该节点后面
+    if(NULL == tmpHead){
+        printf("malloc tmpHead memory error!\n");
+        return NULL;
+    }
     tmpHead->val = -1;
     tmpHead->next = head;//空节点指向有效数据的头
+    
     preTail = tmpHead;//初始化
     nextHead = head;//初始化
     int i = 0;
@@ -42,10 +74,11 @@ struct ListNode* reverseKGroup(struct ListNode* head, int k) {
         nextHead = nextHead->next;
         if(0 == (i%k)){ //k个反转一次
             preTail = reverseOneGroup(preTail, nextHead);
-            printf("is in\n");
         }
-
-        printf("%d, %d\n", nextHead, i);
     }
-    return tmpHead->next;
+    //记录头
+    head = tmpHead->next;
+    free(tmpHead);
+    
+    return head;
 }
