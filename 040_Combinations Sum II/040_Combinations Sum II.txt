@@ -11,7 +11,8 @@
 #define MAX_NUM 1000
 #define MAX_ROW_NUM 100
 /*
- * 基于深度优先搜索
+ * 本题属于寻找无重复子集的问题
+ * 使用遵循深度优先搜索的回溯算法
  *
  * ans_data：组合二维数据的二维指针
  * candidates：组合的数据的一维指针
@@ -80,7 +81,7 @@ int cmp_inc (const void *a , const void *b ){
 /*
  * 与39题不一样的点在：(1)、数据不是有序的；(2)、每个数组只能使用一次
  * 1.首先排序
- * 2.深度优先搜索（注意跳过重复的数字）
+ * 2.回溯（注意跳过重复的数字）
  */
  
 int** combinationSum2(int* candidates, int candidatesSize, int target, int** columnSizes, int* returnSize) {

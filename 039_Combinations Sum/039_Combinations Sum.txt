@@ -6,7 +6,8 @@
 #define MAX_NUM 1000
 #define MAX_ROW_NUM 100
 /*
- * 基于深度优先搜索
+ * 属于寻找子集的问题
+ * 使用遵循深度优先搜索的回溯法
  *
  * ans_data：组合二维数据的二维指针
  * candidates：组合的数据的一维指针
@@ -24,7 +25,7 @@
  *
  * 
  */
-void combinationSum_dfs(int** ans_data, const int* candidates, const int candidatesSize, const int target, int** columnSizes, int* cmbnSum_num, int depth, const int dfs_idx){
+void combinationSum_backTrack(int** ans_data, const int* candidates, const int candidatesSize, const int target, int** columnSizes, int* cmbnSum_num, int depth, const int dfs_idx){
     /* 
      * 已经小于0，退出
      */
@@ -51,7 +52,7 @@ void combinationSum_dfs(int** ans_data, const int* candidates, const int candida
          */
         for(int i=dfs_idx; i<candidatesSize; i++){
             ans_data[*cmbnSum_num][depth] = candidates[i];
-            combinationSum_dfs(ans_data, candidates, candidatesSize, target-candidates[i], columnSizes, cmbnSum_num, depth+1, i);
+            combinationSum_backTrack(ans_data, candidates, candidatesSize, target-candidates[i], columnSizes, cmbnSum_num, depth+1, i);
         }
     }
     return ; 
@@ -84,8 +85,7 @@ int** combinationSum(int* candidates, int candidatesSize, int target, int** colu
     
     /*
      * 申请columnSizes的内存空间
-     * columnSizes是一个指向一维数组的指针
-     * columnSizes所指向的数组的长度都是k
+     * columnSizes是一个指向各个组合的长度（数组形式）的指针
      */
     *columnSizes = (int *)malloc(sizeof(int)*MAX_NUM);
     if(*columnSizes == NULL){
@@ -95,7 +95,7 @@ int** combinationSum(int* candidates, int candidatesSize, int target, int** colu
     
     int nums[target];
     int ans_num = 0;
-    combinationSum_dfs(ans, candidates, candidatesSize, target, columnSizes, &ans_num, 0, 0);
+    combinationSum_backTrack(ans, candidates, candidatesSize, target, columnSizes, &ans_num, 0, 0);
 
     *returnSize = ans_num;
     

@@ -41,8 +41,9 @@ _说明_：
 	* int**：可以组合为target的二维数据的二维指针。
 
 ## 思路			
-### 深度优先搜索
+### 回溯法
 
+	本题属于寻找子集的问题，故使用遵循深度优先搜索的回溯法
 	函数形式：void combinationSum_dfs(int** ans_data, const int* candidates, const int candidatesSize, const int target, int** columnSizes, int* cmbnSum_num, int depth, const int dfs_idx)
 	函数形参：
 		ans_data：组合二维数据的二维指针
@@ -61,6 +62,6 @@ _说明_：
 ### 拓展
 组合类的问题还有很多，继续尝试[组合总和II](https://leetcode-cn.com/problems/combination-sum-ii/description/)吧。
 ### 思考
-组合类的问题很多，都可以用深度优先搜索(回溯法)来做。
+组合类的问题很多，都可以使用遵循深度优先搜索的回溯法来做。
 		  
 # 希望我能在这一年坚持下来，每天都不放弃，每天都至少刷一道题，我相信我可以的！

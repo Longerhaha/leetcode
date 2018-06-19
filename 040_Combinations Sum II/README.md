@@ -42,8 +42,9 @@ _说明_：
 	* int**：可以无重复组合为target的二维数据的二维指针。
 
 ## 思路			
-### 深度优先搜索
+### 回溯算法
 
+	本题属于寻找无重复子集的问题，使用遵循深度优先搜索的回溯算法
 	函数形式：int combinationSum_dfs(int** ans_data, const int* candidates, const int candidatesSize, const int target, int** columnSizes, int* cmbnSum_num, int depth, const int dfs_idx)
 	函数输入：
 		ans_data：组合二维数据的二维指针
@@ -64,6 +65,6 @@ _说明_：
 ### 拓展
 我一直认为回溯就是深度优先搜索，但我一直对这个表示怀疑。于是百度了下[回溯与DFS的区别](http://www.cnblogs.com/ganganloveu/p/4188131.html),可以好好看看。
 ### 思考
-组合类的问题做了三大题（39,40，77题），可以自己好好总结一下了。
+组合类的问题做了三大题（39,40，77题），可以自己好好总结一下了，我自己做了回溯与DFS的区别的一个word文件，有需要可以联系我。
 		  
 # 希望我能在这一年坚持下来，每天都不放弃，每天都至少刷一道题，我相信我可以的！
