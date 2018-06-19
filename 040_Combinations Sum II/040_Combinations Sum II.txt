@@ -1,0 +1,133 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+#define MAX_NUM 1000
+#define MAX_ROW_NUM 100
+/*
+ * 基于深度优先搜索
+ *
+ * ans_data：组合二维数据的二维指针
+ * candidates：组合的数据的一维指针
+ * candidatesSize：组合的数组数据的长度
+ * target：查找目标
+ * columnSizes：指向一维组合长度数组的指针
+ * cmbnSum_num：递归到第几个组合和为target
+ * dfs_idx：递归到第几个数
+ * depth：记录递归深度
+ *
+ *
+ * 递归时：
+ * （1）target小于0则说明无法组合，于是递归结束
+ * （2）target等于0说明可以找到这样的一个组合，于是记录长度，继续查找下一个可能的组合。注意要申请下一个节点的空间并复制上个组合内容，防止*cmbnSum_num  改变后导致之前递归的数据丢失
+ * （3）target大于0则继续递归，递归从数dfs_idx开始递归，直到candidatesSize-1，每次递归深度depth+1，递归数也加1。如果此次可以递归成功，那么就要跳过当前重复的数字。
+ *              
+ *
+ * 
+ */
+int combinationSum_dfs(int** ans_data, const int* candidates, const int candidatesSize, const int target, int** columnSizes, int* cmbnSum_num, int depth, const int dfs_idx){
+    /* 
+     * 已经小于0，退出
+     */
+    if(target < 0)
+        return 0;
+    else if(target == 0){
+        //记录长度
+        (*columnSizes)[*cmbnSum_num] = depth;
+        //继续查找下一个可能的组合
+        *cmbnSum_num += 1;
+        //申请下一个节点的空间并复制上个组合内容，防止*cmbnSum_num改变后导致之前递归的数据丢失
+        ans_data[*cmbnSum_num] = malloc(sizeof(int)*MAX_ROW_NUM);
+        if(NULL == ans_data[*cmbnSum_num]){
+            printf("malloc ans_data[%d] memory error!\n", *cmbnSum_num);
+        }
+        memcpy(ans_data[*cmbnSum_num], ans_data[(*cmbnSum_num)-1], sizeof(int)*depth);
+        (*columnSizes)[*cmbnSum_num] = 0;
+        return 1;
+    }
+    else{
+        /* 
+         * target大于0则继续寻找
+         * 寻找时从数dfs_idx开始递归，直到candidatesSize-1
+         */
+        int i=dfs_idx;
+        while(i<candidatesSize){
+            ans_data[*cmbnSum_num][depth] = candidates[i];
+            if(combinationSum_dfs(ans_data, candidates, candidatesSize, target-candidates[i], columnSizes, cmbnSum_num, depth+1, i+1)){
+                //跳过重复的数字
+                while(candidates[i] == candidates[i+1]){
+                    i++;
+                }
+            }
+            i++;
+        }
+    }
+    return 1; 
+}
+
+/*
+ * 用于qsort的升序函数
+ */
+int cmp_inc (const void *a , const void *b ){ 
+    return (*(int *)a - *(int *)b); 
+}
+/*
+ * 与39题不一样的点在：(1)、数据不是有序的；(2)、每个数组只能使用一次
+ * 1.首先排序
+ * 2.深度优先搜索（注意跳过重复的数字）
+ */
+ 
+int** combinationSum2(int* candidates, int candidatesSize, int target, int** columnSizes, int* returnSize) {
+    /*
+     * 先排序
+     */
+    qsort(candidates, candidatesSize, sizeof(int), cmp_inc);
+    /*
+     * 申请组合总和为target的内存空间
+     * ans是一个指向二维数组的指针
+     */
+    int** ans = (int**)malloc(sizeof(int*)*MAX_NUM);
+    if(NULL == ans){
+        printf("malloc ans memory error!\n");
+        return NULL;
+    }
+    /*int** p = ans; 
+    for(p=ans; p<ans+MAX_NUM; p++){
+        p[0] = (int*)malloc(sizeof(int)*target);
+        if(NULL == p[0]){
+            printf("malloc ans[%d] memory error!\n", p-ans);
+            return NULL;
+        }
+    }*/
+    ans[0] = (int*)malloc(sizeof(int)*MAX_ROW_NUM);
+    if(NULL == ans[0]){
+        printf("malloc ans[0] memory error!\n");
+        return NULL;
+    }
+    
+    
+    /*
+     * 申请columnSizes的内存空间
+     * columnSizes是一个指向一维数组的指针
+     * columnSizes所指向的数组的长度都是k
+     */
+    *columnSizes = (int *)malloc(sizeof(int)*MAX_NUM);
+    if(*columnSizes == NULL){
+        printf("malloc columnSizes memory error!\n");
+        return NULL;
+    }
+    
+    int nums[target];
+    int ans_num = 0;
+    combinationSum_dfs(ans, candidates, candidatesSize, target, columnSizes, &ans_num, 0, 0);
+
+    *returnSize = ans_num;
+    
+    return ans;
+}
