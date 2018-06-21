@@ -78,8 +78,8 @@ int** combine(int n, int k, int** columnSizes, int* returnSize) {
 
     /*
      * 申请columnSizes的内存空间
-     * columnSizes是一个指向一维数组的指针
-     * columnSizes所指向的数组的长度都是k
+     * columnSizes是一个指向各个组合的长度（数组形式）的指针的指针,即*columnSizes指向一个数组。
+     * *columnSizes所指向的数组的长度都是k
      */
     *columnSizes=(int *)malloc(sizeof(int)*ret_size);
     if(columnSizes == NULL){

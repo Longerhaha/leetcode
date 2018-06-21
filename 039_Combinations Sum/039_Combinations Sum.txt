@@ -13,7 +13,7 @@
  * candidates：组合的数据的一维指针
  * candidatesSize：组合的数组数据的长度
  * target：查找目标
- * columnSizes：指向一维组合长度数组的指针
+ * columnSizes：columnSizes是一个指向各个组合的长度（数组形式）的指针的指针,即*columnSizes指向一个数组。
  * cmbnSum_num：递归到第几个组合和为target
  * dfs_idx：递归到第几个数
  * depth：记录递归深度
@@ -85,7 +85,7 @@ int** combinationSum(int* candidates, int candidatesSize, int target, int** colu
     
     /*
      * 申请columnSizes的内存空间
-     * columnSizes是一个指向各个组合的长度（数组形式）的指针
+     * columnSizes是一个指向各个组合的长度（数组形式）的指针的指针,即*columnSizes指向一个数组。
      */
     *columnSizes = (int *)malloc(sizeof(int)*MAX_NUM);
     if(*columnSizes == NULL){
