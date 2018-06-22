@@ -1,0 +1,87 @@
+//qsort的升序函数
+int cmp_inc (const void *a , const void *b ){ 
+    return (*(int *)a - *(int *)b); 
+} 
+/*
+ * 基于子集树的回溯法
+ * data是所有子集的二维指针
+ * nums是指向输入的数组的指针
+ * numsSize是输入的数组的长度
+ * columnSizes是一个指向各个组合的长度（数组形式）二维指针，也就是*columnSizes指向各个组合的长度（数组形式）二维指针
+ * data_num是第几个组合
+ * ele_num是当前子集包含的元素个数
+ * depth是遍历的深度
+ *
+ * 递归结束：深度depth与numsSize相等时，此时记录当前自己的长度，然后寻找下一个子集并拷贝上一个子集数据到下一个子集的数据
+ * 否则递归子集
+ */
+void subsets_backTrack(int** data, const int* nums, const int numsSize, int** columnSizes, int* data_num, int ele_num, int depth){
+    if(depth == numsSize){
+        (*columnSizes)[*data_num] = ele_num;
+        /*
+         * 寻找下一个子集并拷贝上一个子集数据到下一个子集的数据
+         */
+        *data_num += 1;
+        data[*data_num] = (int*)malloc(sizeof(int)*numsSize);
+        if(NULL == data[*data_num]){
+            printf("malloc data[%d] error!\n", *data_num);
+        }
+        for(int i=0; i<depth; i++){
+            data[*data_num][i] = data[*data_num-1][i];
+        }
+        return ;
+    }
+    
+    //ele_num位置无子集元素，跳过
+    subsets_backTrack(data, nums, numsSize, columnSizes, data_num, ele_num, depth+1);
+    //ele_num位置有子集元素为nums[depth]
+    while(depth+1<numsSize && nums[depth]==nums[depth+1])
+        ele_num++, data[*data_num][ele_num] = nums[depth++];
+    data[*data_num][ele_num] = nums[depth];
+    subsets_backTrack(data, nums, numsSize, columnSizes, data_num, ele_num+1, depth+1);
+}
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+/*
+ * 1.先排序
+ * 2.基于子集树寻找子集
+ */
+int** subsetsWithDup(int* nums, int numsSize, int** columnSizes, int* returnSize) {
+    //1.排序
+    qsort(nums, numsSize, sizeof(int), cmp_inc);
+    /*
+     * 申请子集空间
+     */
+    int ans_num = (int)pow(2, numsSize);
+    int** ans = (int**)malloc(sizeof(int*)*ans_num);
+    if(ans == NULL){
+        printf("malloc ans memory error!\n");
+        return NULL;
+    }
+    /*
+     * 申请子集的列空间
+     */
+    *columnSizes = (int*)malloc(sizeof(int)*ans_num);
+    if(NULL == *columnSizes){
+        printf("malloc *columnSizes memory error!\n");
+        return NULL;
+    }
+    /*
+     * 申请第一个子集内存
+     */
+    ans[0] = (int*)malloc(sizeof(int)*numsSize);
+    if(NULL == ans[0]){
+        printf("malloc ans[0] error!\n");
+    }
+
+    //回溯
+    int ans_len = 0;
+    subsets_backTrack(ans, nums, numsSize, columnSizes, &ans_len, 0, 0);
+    
+    *returnSize = ans_len;
+    return ans;
+}
+
