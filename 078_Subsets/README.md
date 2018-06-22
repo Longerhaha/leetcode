@@ -36,23 +36,37 @@
 ## 思路			
 ### 基于子集树的回溯法
 
-	函数名：void subsets_backTrack(int** data, const int* nums, const int numsSize, int** columnSizes, int* data_num, int* set, int depth)
+	函数名：void subsets_backTrack(int** data, const int* nums, const int numsSize, int** columnSizes, int* data_num, int ele_num, int depth)
 	函数输入：	
 		data是所有子集的二维指针
 		nums是指向输入的数组的指针
 		numsSize是输入的数组的长度
 		columnSizes是一个指向各个组合的长度（数组形式）二维指针，也就是*columnSizes指向各个组合的长度（数组形式）二维指针
 		data_num是当前寻找的是第几个组合
-		set是遍历的子集集合的指针
+		ele_num是当前子集包含的元素个数
 		depth是遍历的深度
 	
 	函数流程：
-		深度depth与numsSize相等时，此时根据set里面记录的内容(1代表有，0代表无)，复制数据
-		否则记录set，并左右递归子集。
+		深度depth与numsSize相等时，此时记录本子集的长度到*columnSizes所指向的数组中，然后寻找下一个子集并拷贝上一个子集数据到下一个子集的数
+		否则递归：
+		（1）ele_num位置无子集元素，ele_num保持，深度depth加1，递归。
+		（2）ele_num位置有子集元素为nums[depth]，ele_num加1，深度depth加1，递归。
 		
 	例子：比如输入nums = [1,2]:
-	则回溯的set分别是[0,0],[0,1],[1,0],[1,1]。
-	递归结束后则子集是[0], [2], [1], [1, 2]
+	第1次递归ele_num=0，depth=0，ele_num位置无子集元素，ele_num保持，深度depth加1。
+	第2次递归ele_num=0，depth=1，ele_num位置无子集元素，ele_num保持，深度depth加1。
+	第3次递归ele_num=0，depth=2，depth==numsSize==2，递归结束，记录第1个子集为[]。
+	回到第2次的递归，此时递归（1）结束，进行递归（2）
+	第4次递归ele_num=0，depth=1，ele_num位置有子集元素[2]，ele_num+1，深度depth加1。
+	第5次递归ele_num=1，depth=2，depth==numsSize==2，递归结束，记录第2个子集为[2]。
+	回到第1次的递归，此时递归（1）结束，进行递归（2）
+	第6次递归ele_num=0，depth=0，ele_num位置有子集元素[1]，ele_num+1，深度depth加1。
+	第7次递归ele_num=1，depth=1，ele_num位置无子集元素，ele_num保持，深度depth加1。
+	第8次递归ele_num=1，depth=2，depth==numsSize==2，递归结束，记录第3个子集为[1]。
+	回到第7次的递归，此时递归（1）结束，进行递归（2）
+	第9次递归ele_num=1，depth=1，ele_num位置有子集元素[2]，此时子集是[1,2],ele_num+1，深度depth加1。
+	第10次递归ele_num=1，depth=2，depth==numsSize==2，递归结束，记录第4个子集为[1,2]。
+	综上，子集是[[], [2], [1], [1,2]]
 			
 ## 拓展与思考：
 ### 拓展
