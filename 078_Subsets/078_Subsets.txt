@@ -9,7 +9,7 @@
  * ele_num是当前子集包含的元素个数
  * depth是遍历的深度
  *
- * 递归结束：深度depth与numsSize相等时，此时根据set里面记录的内容，复制数据
+ * 递归结束：深度depth与numsSize相等时，此时记录当前自己的长度，然后寻找下一个子集并拷贝上一个子集数据到下一个子集的数据
  * 否则递归子集
  */
 void subsets_backTrack(int** data, const int* nums, const int numsSize, int** columnSizes, int* data_num, int ele_num, int depth){
