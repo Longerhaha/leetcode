@@ -1,0 +1,56 @@
+void merge(int* nums1, int m, int* nums2, int n) {
+    /*
+     * 方法1：非原地修改
+     *        因为从头开始遍历，难免会有值会被覆盖，所以采用非原地修改
+     
+    int nums_merge[m+n];
+    int merge_idx = 0;
+    int nums1_idx = 0;
+    int nums2_idx = 0;
+    //先遍历到nums1有数据的尾巴或者nums2的尾巴
+    while(nums1_idx < m && nums2_idx < n){
+        if(nums1[nums1_idx] < nums2[nums2_idx])
+            nums_merge[merge_idx++] = nums1[nums1_idx++];
+        else
+            nums_merge[merge_idx++] = nums2[nums2_idx++];
+        
+    }
+    
+    //若nums2先遍历到尾巴，把nums1中的数全部遍历
+    while(nums1_idx < m)
+        nums_merge[merge_idx++] = nums1[nums1_idx++];
+    //若nums1先遍历到尾巴，把nums2中的数全部遍历
+    while(nums2_idx < n)
+        nums_merge[merge_idx++] = nums2[nums2_idx++];
+    
+    memcpy(nums1, nums_merge, (m+n)*sizeof(int));*/
+    /*
+     * 方法2：原地修改
+     * 从尾巴开始遍历，可以保证在遍历过程中nums1的值不被覆盖
+     */
+    /* 
+     * 特殊情况处理
+     */
+    if(m == 0)
+        memcpy(nums1, nums2, sizeof(int)*n);
+    if(n == 0)
+        return ;
+    
+    int merge_idx = m+n-1;
+    int nums1_idx = m-1;
+    int nums2_idx = n-1;
+    //从尾巴开始遍历，直至某个数组遍历到头
+    while(nums1_idx >= 0 && nums2_idx >= 0){
+        if(nums1[nums1_idx] > nums2[nums2_idx])
+            nums1[merge_idx--] = nums1[nums1_idx--];
+        else
+            nums1[merge_idx--] = nums2[nums2_idx--]; 
+    }
+    //若nums2先遍历到头，把nums1中剩下的数全部遍历
+    while(nums1_idx >= 0)
+        nums1[merge_idx--] = nums1[nums1_idx--];
+    //若nums1先遍历到头，把nums2中剩下的数全部遍历
+    while(nums2_idx >= 0)
+        nums1[merge_idx--] = nums2[nums2_idx--];
+    
+}
