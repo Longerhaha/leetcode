@@ -1,0 +1,39 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+/*
+ * cur指向当前节点的指针
+ * pre指向之前节点的指针
+ * 如果cur->val == pre->val则跳过该节点
+ */
+struct ListNode* deleteDuplicates(struct ListNode* head) {
+    if(head == NULL)
+        return NULL;
+    
+    /*
+     * 由于第一个节点肯定不会被删除，所以没有建立空头结点的必要性
+     */
+    struct ListNode* pre = head;
+    struct ListNode* cur = pre->next;
+    //从第二个节点开始搜查
+    while(cur){
+        if(cur->val == pre->val){
+            pre->next = cur->next;
+            //此时pre保持不变,cur向前一步并准备释放cur所指向的节点的内存
+            struct ListNode* tmp = cur;
+            cur = cur->next;
+            free(tmp);
+        }
+        //两个节点相等，则一起往前走一步
+        else{
+            pre = cur;
+            cur = cur->next;
+        }
+    }
+    return head;
+}
