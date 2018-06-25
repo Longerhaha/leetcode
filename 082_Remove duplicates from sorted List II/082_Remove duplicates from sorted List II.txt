@@ -1,0 +1,79 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+/* 
+ * 1. 建立空头结点
+ * 2. 若有重复元素，跳过重复元素，否则整体向右一个有效单元
+ *    跳过重复元素：
+ *    (i) pre指向cur前一个元素，cur指向当前元素，next指向后一个元素
+ *    (ii)当cur与next指向节点的值相同时，则移动next，保持pre与cur不变，知道next指向节点的值与cur指向的节点的值不一样（注意释放重复节点空间）。
+ *        当cur与next指向节点的值不同时，整体向后移动一个单位
+ * 3. 删除空头结点
+ * 例1：空头节点->  1  ->  1  -> NULL
+ *          pre    cur     next
+ *      cur->val == next->val且后面没有元素，pre指向NULL，跳出
+ *     输出[]       
+ * 例2：空头节点 ->  1  ->  1  ->  2  -> NULL
+ *          pre    cur   next
+ *     cur->val == next->val且后面有元素，保持 pre与cur不变， next往后移动一个  
+ *     空头节点 ->  1  ->  1  ->  2  -> NULL
+ *          pre    cur         next
+ *     cur->val != next->val
+ *     空头节点               ->  2  -> NULL 
+ *          pre                  cur     next
+ *     进入while大循环，此时next等于NULL，退出
+ *     输出[2]
+ */
+
+struct ListNode* deleteDuplicates(struct ListNode* head) {
+    if(head == NULL)
+        return NULL;
+    /*
+     * 由于可能会删除头节点，所以建立头空节点这样子会给处理带来一点方便
+     */
+    struct ListNode* fake_head = (struct ListNode* )malloc(sizeof(struct ListNode));
+    fake_head->val = -1;
+    fake_head->next = head;
+    /*
+     * 使用三个指针pre, cur, next, pre指向当前节点的前一个节点，cur指向当前节点，next指向下一个节点
+     */
+    struct ListNode* pre = fake_head; 
+    struct ListNode* cur = head;
+    struct ListNode* next = cur->next;
+    while(next){
+        //跳过重复元素
+        if(cur->val == next->val){ 
+            while(next && cur->val==next->val){
+                struct ListNode* tmp = next;
+                next = next->next;
+                free(tmp); 
+            }
+            //跳过该节点,并释放cur节点
+            pre->next = next; 
+            free(cur);
+            //这里存在两种情况
+            //1. 跳过该重复元素后，后面没有元素，即next=NULL，此时退出即可
+            //2. 跳过后后面有大于等于一个的元素
+            if(next == NULL)
+                break;
+            else
+                cur = next;
+            next = next->next;
+        }
+        //整体向右移动一个单位
+        else{
+            pre = cur;
+            cur = next;
+            next = next->next;
+        }
+
+    }
+    //记录删除重复元素后的链表表头，删除空头节点
+    head = fake_head->next;
+    free(fake_head);
+    return head;
+}
