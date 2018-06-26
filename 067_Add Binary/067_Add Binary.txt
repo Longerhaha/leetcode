@@ -1,0 +1,39 @@
+#define MAX(a, b) (a>=b?a:b)
+char* addBinary(char* a, char* b) {
+    int len_a = strlen(a);
+    int len_b = strlen(b);
+    //需要多申请1个数据节点和'\0'
+    char* add_res = (char*)malloc(sizeof(int)*(MAX(len_a, len_b)+2));
+    //初始化
+    int pos_res = MAX(len_a, len_b);
+    add_res[pos_res+1] = '\0';
+    int carry = 0;
+    char* p1 = a+(len_a-1);
+    char* p2 = b+(len_b-1);
+    //先加到某个数的头
+    while(p1>=a && p2>=b){
+        add_res[pos_res] = (*p1+*p2-'0'+carry)>=(2+'0') ? (*p1+*p2-'0'+carry-2):(*p1+*p2-'0'+carry);
+        carry = (*p1+*p2+carry-'0')>=(2+'0') ? 1:0;
+        pos_res--, p1--, p2--;
+    }
+    //如果a的长度大于b的长度，继续加
+    while(p1 >= a){
+        add_res[pos_res] = (*p1+carry)>=(2+'0') ? (*p1+carry-2):(*p1+carry);
+        carry = (*p1+carry)>=(2+'0') ? 1:0;
+        pos_res--, p1--;
+    }
+    //如果b的长度大于a的长度，继续加
+    while(p2 >= b){
+        add_res[pos_res] = (*p2+carry)>=(2+'0') ? (*p2+carry-2):(*p2+carry);
+        carry = (*p2+carry)>=(2+'0')?1:0;
+        pos_res--, p2--;
+    }
+    //如果最高位有进位
+    if(carry){
+        add_res[pos_res] = '1';
+        return add_res;
+    }
+    else{
+        return add_res+1;
+    }
+}
