@@ -1,0 +1,35 @@
+/**
+ * Return an array of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* plusOne(int* digits, int digitsSize, int* returnSize) { 
+    int carry = 1;
+    //比如9、99、999这样的数加1后位数会增加1位，所以要多申请一个
+    int* digit_add_one = (int*)malloc(sizeof(int)*(digitsSize+1));
+    if(NULL == digit_add_one){
+        perror("malloc digit_add_one memory error");
+        exit(EXIT_FAILURE);
+    }
+    //从后往前就开始算
+    int* p1 = digits+(digitsSize-1);
+    int* p2 = digit_add_one+digitsSize;
+    
+    for(; p1>=digits && p2>=digit_add_one; p1--, p2--){
+        *p2 = (*p1+carry)%10;
+        carry = (*p1+carry)/10;
+    }
+    /*
+     * 如果最高位进位了
+     */
+    if(carry){
+        *p2 = 1;
+        *returnSize = digitsSize+1;
+        return digit_add_one;
+    }
+    //最高位没有进位
+    else{
+        *returnSize = digitsSize;
+        return digit_add_one+1;
+    }
+    
+}
