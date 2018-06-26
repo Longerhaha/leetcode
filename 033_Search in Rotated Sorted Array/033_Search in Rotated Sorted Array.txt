@@ -1,9 +1,9 @@
 /*
  *时间复杂度要求是O(log n)，所以采用二分查找
- *由于其实旋转有序的，所以需要判断是往左递归查找还是往右递归
+ *由于数据是旋转有序的，所以需要判断是往左递归查找还是往右递归
  *根据左边有序还是右边有序可以分为如下情况
- *左边有序：若在左边有序的范围内递归左边，否则递归右边
- *右边有序：若在右边有序的范围内递归右边，否则递归左边
+ *左边有序：若在左边有序的范围内递归查找左边，否则递归查找右边
+ *右边有序：若在右边有序的范围或者start等于mid时递归查找右边，否则递归查找左边
  */
 int binary_search(int* nums, int numsSizem, int target, int start, int end){
     int mid = (start+end)/2;
@@ -14,20 +14,20 @@ int binary_search(int* nums, int numsSizem, int target, int start, int end){
         return target==nums[mid] ? mid:-1;
     }
     //左边有序
-    if(nums[start] <= nums[mid]){
+    if(nums[start] < nums[mid]){
         //若在左边有序的范围则查找左边，否则查找右边
-        if(nums[start]<=target && target<=nums[mid]) 
-            return binary_search(nums, numsSizem, target, start, mid);
+        if(nums[start]<=target && target<nums[mid])
+            return binary_search(nums, numsSizem, target, start, mid-1);
         else
             return binary_search(nums, numsSizem, target, mid+1, end);
     }    
     //右边有序
     else{
-        //若在右边有序的范围则查找右边，否则查找左边
-        if(nums[mid]<=target && target<=nums[end])
+        //若在右边有序的范围或者start等于mid时查找右边，否则查找左边
+        if((nums[mid]<target && target<=nums[end]) || start==mid)
             return binary_search(nums, numsSizem, target, mid+1, end);
         else
-            return binary_search(nums, numsSizem, target, start, mid);
+            return binary_search(nums, numsSizem, target, start, mid-1);
     }
 
 }
