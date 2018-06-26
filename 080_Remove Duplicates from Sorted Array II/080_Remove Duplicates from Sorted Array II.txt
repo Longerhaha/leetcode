@@ -1,0 +1,22 @@
+int removeDuplicates(int* nums, int numsSize) {
+    if(numsSize == 0)
+        return 0;
+    int valid_num = 1;//记录有效是数据个数,即去除多余重复数据后的数据长度
+    int search_num = 1;//记录当前搜索的位置
+    int dulp_num = 0;//记录当前重复的字符的个数(该值等于1时说明有已经有两个元素相同了，后面相同的元素可以跳过了)，如果当前字符与上一个字符不同，则置0
+    //第一个肯定是有效数据
+    for( ; search_num<numsSize; search_num++){
+        if(nums[search_num] == nums[search_num-1]){
+            if(dulp_num == 0){
+                nums[valid_num++] = nums[search_num];
+            }
+            dulp_num++;    
+        }
+        else{
+            nums[valid_num++] = nums[search_num];
+            dulp_num = 0;
+        }
+        //printf("%d %d %d\n", search_num, valid_num, dulp_num);
+    }
+    return valid_num;
+}
