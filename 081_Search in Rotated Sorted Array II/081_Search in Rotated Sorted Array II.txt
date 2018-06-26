@@ -1,0 +1,56 @@
+bool binary_seatch(const int* nums, const int numsSize, const int target, int start, int end){
+    int mid = (start+end)/2;
+    /*
+     * 先跳过重复元素
+     * 注意start不能大于mid的位置
+     * mid不能大于end的位置
+     */
+    while(start < mid && nums[start] == nums[mid])
+        start++;
+    while(mid < end && nums[mid] == nums[end])
+        end--;
+    /*
+     * 递归结束条件start与end相等或者刚好中间值是想要找的值
+     *
+     * start与end相等的时候，有两种可能。
+     * (1).跳过重复元素导致相等
+     * (2).深度递归到底部时二者相等
+     
+     */
+    if(start==end || nums[mid]==target){
+        return nums[mid]==target?true:false;
+    }
+    
+    /*
+     * 左有序，在左面范围内或者mid与end相等的时候只要搜索左边即可，否则搜索右边
+     * 右有序，在右边范围内或者start与mid相等的时候只要搜索右边即可，否则搜索左边
+     */
+    if(nums[start] < nums[mid]){
+        /*
+         * 注意此时可能end与mid相等
+         * 所以在左面范围内或者mid与end相等的时候只要搜索左边即可
+         */
+        if((nums[start]<=target && target<nums[mid]) || mid==end)
+            return binary_seatch(nums, numsSize, target, start, mid-1);
+        else
+            return binary_seatch(nums, numsSize, target, mid+1, end);
+    }
+    //右边有序
+    else{
+        /*
+         * 注意此时可能start与mid相等
+         * 所以在右边范围内或者start与mid相等的时候只要搜索右边即可
+         */
+        if((nums[mid]<target && target<=nums[end]) || start==mid)
+            return binary_seatch(nums, numsSize, target, mid+1, end);
+        else
+            return binary_seatch(nums, numsSize, target, start, mid-1);
+    }
+}
+bool search(int* nums, int numsSize, int target) {
+    if(numsSize == 0)
+        return false;
+    else if(numsSize == 1)
+        return target==nums[0]?true:false;
+    return binary_seatch(nums, numsSize, target, 0, numsSize-1);
+}
