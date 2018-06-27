@@ -1,0 +1,19 @@
+/*
+ * 双下标法，时间复杂度为O（sqrt(c)）
+ */
+bool judgeSquareSum(int c) {
+    int start = 0 ;
+    int end = sqrt(c);
+    while(start < end){
+        if(start*start+end*end < c)
+            start++;
+        else if(start*start+end*end == c)
+            return true;
+        else
+            end--;
+    }
+    /*
+     * 跳出循环时二者相等
+     */
+    return (2*start*start == c) ? true:false;
+}
