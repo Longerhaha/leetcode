@@ -1,6 +1,6 @@
 # leetcode
 # stick to it everyday and your will be a good algorithm engineer!
-## 633_Sum of Square Numbers（平方数数之和）
+## 633_Sum of Square Numbers（平方数之和）
 ## 问题描述与输入输出
 ### 问题描述
 
