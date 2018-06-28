@@ -1,0 +1,45 @@
+#define MAX  2147483647
+#define MIN -2147483648
+#define ABS(x) ((x)>=0?(x):(-(x)))
+
+/*
+ * 基于恢复余数算法的除法器（基于FPGA的数字信号处理）
+ * 会用到乘法
+ */
+
+/*
+ * 二分法
+ * next记录每次二分后，所残留的被除数
+ * while(next >= divisor)
+ *     divisor的倍数分别是1,2,4,...2^n直至divisor*(2^n)大于dividend
+ *     然后商加等于2^(n-1)，next等于dividend-2^(n-1)     
+ */
+#define RESTORING 1
+
+#define ALGO_SELECT 1
+#if ALGO_SELECT == RESTORING
+    int divide(int dividend, int divisor) {
+        /*
+         * 注意输入-2147483647与-1，所以要用更大的数表述
+         */
+        long quot = 0;
+        long u_dividend = ABS((long)dividend);
+        long u_divisor = ABS((long)divisor);
+        long next = u_dividend;
+        
+        while(next >= u_divisor){
+            //printf("%d %d\n", quot, next);
+            int i = 1;
+            while((u_divisor<<i) < next)
+                i <<= 1;
+            quot += 1<<(i>>1);
+            next -= u_divisor<<(i>>1);
+        }
+        
+        
+        if((dividend>=0 && divisor>=0) || (dividend<=0 && divisor<=0)) 
+            return quot>=MAX ? MAX:quot;
+        else
+            return (-quot)<=MIN ? MIN:(-quot);
+    }
+#endif
