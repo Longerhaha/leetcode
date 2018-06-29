@@ -1,0 +1,39 @@
+/*
+ * 四平方和定理：https://baike.baidu.com/item/%E5%9B%9B%E5%B9%B3%E6%96%B9%E5%92%8C%E5%AE%9A%E7%90%86/4507832
+ */
+#define FOUR_SQUARE_SUM 1
+
+/*
+ * 动态规划算法
+ *
+ */
+#define DP 2
+#define MAX_NUM 5
+#define MIN(a,b) ((a)>=(b) ? (b):(a))
+#define ALGO_SEL 2
+#if ALGO_SEL == FOUR_SQUARE_SUM
+    int numSquares(int n) {
+        while (n % 4 == 0) n /= 4;
+        if (n % 8 == 7) return 4;
+        for (int a = 0; a * a <= n; ++a) {
+            int b = sqrt(n - a * a);
+            if (a * a + b * b == n) {
+                return !!a + !!b;
+            }
+        }
+        return 3;
+    }
+#elif ALGO_SEL == DP
+    int numSquares(int n) {
+        int dp[n+1];
+        dp[0] = 0;
+        memset(dp+1, MAX_NUM, n*sizeof(int));
+        for(int i=0; i<n; i++){
+            for(int j=1; i+j*j <= n; j++){
+                dp[i+j*j] = MIN(dp[i+j*j], dp[i]+1);
+            }
+        }
+        return dp[n];
+    }
+
+#endif
