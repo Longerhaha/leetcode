@@ -1,0 +1,49 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+/*
+ * 递归算法
+ * 1. 先递归左孩子
+ * 2. 把root的数据保存下来，计数加1
+ * 3. 接着，再递归右孩子
+ */
+#define RECURSIVE 1 
+
+#define ALGO_SEL 1
+#if ALGO_SEL == RECURSIVE
+    /*
+     * 中序递归的数据处理程序
+     */
+    void sub_inorderTraversal(struct TreeNode* root, int* data, int* p_num){
+        if(root == NULL)
+            return ;
+        /*
+         * 1. 先递归左孩子
+         * 2. 把root的数据保存下来，计数加1
+         * 3. 接着，再递归右孩子
+         */
+        sub_inorderTraversal(root->left,  data, p_num);
+        *(data + *p_num) = root->val;
+        *p_num += 1;
+        sub_inorderTraversal(root->right, data, p_num);
+    }
+
+    /**
+     * Return an array of size *returnSize.
+     * Note: The returned array must be malloced, assume caller calls free().
+     */
+    #define MAX 1000
+    int* inorderTraversal(struct TreeNode* root, int* returnSize) {
+        int* mid_traverse = (int*)malloc(sizeof(int)*MAX);
+        assert(NULL != mid_traverse);//断言机制
+        int num = 0;
+        sub_inorderTraversal(root, mid_traverse, &num);
+        *returnSize = num;
+        return mid_traverse;
+    }
+#endif
