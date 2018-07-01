@@ -6,11 +6,10 @@
  *     struct TreeNode *right;
  * };
  */
-
 /*
  * 递归算法
- * 1. 把root的数据保存下来，计数加1
- * 2. 先递归左孩子
+ * 1. 先递归左孩子
+ * 2. 把root的数据保存下来，计数加1
  * 3. 接着，再递归右孩子
  */
 #define RECURSIVE 1 
@@ -22,23 +21,21 @@
 /*
  * Morris Traversal
  * 参考来源:二叉树的遍历https://blog.csdn.net/yc461515457/article/details/78082042
- * 1. 如果当前节点的左孩子为空，记录当前节点，并将其右孩子作为当前节点。
+ * 1. 如果当前节点的左孩子为空，则将其右孩子作为当前节点。
  * 2. 如果当前节点的左孩子不为空，在当前节点的左子树中找到当前节点在中序遍历下的前驱节点。
- * a) 如果前驱节点的右孩子为空，记录当前节点，并将它的右孩子设置为当前节点。当前节点更新为当前节点的左孩子。
- * b) 如果前驱节点的右孩子为当前节点，将它的右孩子重新设为空（恢复树的形状）。当前节点更新为当前节点的右孩子。
+ * a) 如果前驱节点的右孩子为空，将它的右孩子设置为当前节点。当前节点更新为当前节点的左孩子。
+ * b) 如果前驱节点的右孩子为当前节点，将它的右孩子重新设为空（恢复树的形状）。输出当前节点。当前节点更新为当前节点的右孩子。
  * 3. 重复以上1、2直到当前节点为空。
- * 其与先序遍历的差别只是数据记录节点不一样，先序遍历记录节点在1和2(a)，中序遍历记录节点在1和2(b)。
  */
 #define MORRIS 3
 
 #define ALGO_SEL 3
 
 #if ALGO_SEL == RECURSIVE
-    #define MAX 1000
     /*
-     * 先序递归的数据处理程序
+     * 中序递归的数据处理程序
      */
-    void sub_preorderTraversal(const struct TreeNode* root, int* data, int* p_num){
+    void sub_inorderTraversal(const struct TreeNode* root, int* data, int* p_num){
         if(root == NULL)
             return ;
         /*
@@ -46,26 +43,25 @@
          * 2. 把root的数据保存下来，计数加1
          * 3. 接着，再递归右孩子
          */
+        sub_inorderTraversal(root->left,  data, p_num);
         *(data + *p_num) = root->val;
         *p_num += 1;
-        sub_preorderTraversal(root->left,  data, p_num);
-        sub_preorderTraversal(root->right, data, p_num);
+        sub_inorderTraversal(root->right, data, p_num);
     }
 
     /**
      * Return an array of size *returnSize.
      * Note: The returned array must be malloced, assume caller calls free().
      */
-    
-    int* preorderTraversal(struct TreeNode* root, int* returnSize) {
-        int* pre_traverse = (int*)malloc(sizeof(int)*MAX);
-        assert(NULL != pre_traverse);//断言机制
+    #define MAX 1000
+    int* inorderTraversal(struct TreeNode* root, int* returnSize) {
+        int* mid_traverse = (int*)malloc(sizeof(int)*MAX);
+        assert(NULL != mid_traverse);//断言机制
         int num = 0;
-        sub_preorderTraversal(root, pre_traverse, &num);
+        sub_inorderTraversal(root, mid_traverse, &num);
         *returnSize = num;
-        return pre_traverse;
+        return mid_traverse;
     }
-
 #elif ALGO_SEL == LIST_STACK
     #include<assert.h>
     #include<stdio.h>
@@ -163,47 +159,43 @@
         return len;
     }
 
-    void list_stack_preorderTraversal(const struct TreeNode* root, int* data, int* p_num){
+    void list_stack_inorderTraversal(const struct TreeNode* root, int* data, int* p_num){
         p_stack head = stack_init();
         assert(-1 != head);
         struct TreeNode* tmp = root;
-        while(tmp){
+        while(tmp || !stack_is_empty(head)){
+            while(tmp != NULL){ //左边节点非空，则入栈
+                stack_push(head, tmp);
+                tmp = tmp->left;
+            }
+            //弹出一个数
+            tmp = stack_pop(head);
             *(data + *p_num) = tmp->val;
             *p_num += 1;
-            
-            if(tmp->right != NULL){ //左边节点非空，则入栈
-                stack_push(head, tmp->right);
-            }
-            if(tmp->left != NULL){ //左边节点非空，则入栈
-                stack_push(head, tmp->left);
-            }
-            /*
-             * 此时堆栈为空，则为跳出while循环做准备，否则从链栈弹出一个数据
-             */
-            tmp = stack_is_empty(head) ? NULL:stack_pop(head);
+    
+            tmp = tmp->right;            
         }
     }
     
-    int* preorderTraversal(struct TreeNode* root, int* returnSize) {
-        int* pre_traverse = (int*)malloc(sizeof(int)*MAX_DATA_LEN);
-        assert(NULL != pre_traverse);//断言机制
+    int* inorderTraversal(struct TreeNode* root, int* returnSize) {
+        int* mid_traverse = (int*)malloc(sizeof(int)*MAX_DATA_LEN);
+        assert(NULL != mid_traverse);//断言机制
         int num = 0;
-        list_stack_preorderTraversal(root, pre_traverse, &num);
+        list_stack_inorderTraversal(root, mid_traverse, &num);
         *returnSize = num;
-        return pre_traverse;
+        return mid_traverse;
     }
 
 #elif ALGO_SEL == MORRIS
    /*
-    * 1. 如果当前节点的左孩子为空，记录当前节点，并将其右孩子作为当前节点。
+    * 1. 如果当前节点的左孩子为空，则将其右孩子作为当前节点。
     * 2. 如果当前节点的左孩子不为空，在当前节点的左子树中找到当前节点在中序遍历下的前驱节点。
-    * a) 如果前驱节点的右孩子为空，记录当前节点，并将它的右孩子设置为当前节点。当前节点更新为当前节点的左孩子。
-    * b) 如果前驱节点的右孩子为当前节点，将它的右孩子重新设为空（恢复树的形状）。当前节点更新为当前节点的右孩子。
+    * a) 如果前驱节点的右孩子为空，将它的右孩子设置为当前节点。当前节点更新为当前节点的左孩子。
+    * b) 如果前驱节点的右孩子为当前节点，将它的右孩子重新设为空（恢复树的形状）。输出当前节点。当前节点更新为当前节点的右孩子。
     * 3. 重复以上1、2直到当前节点为空。
-    * 其与先序遍历的差别只是数据记录节点不一样，先序遍历记录节点在1和2(a)，中序遍历记录节点在1和2(b)。
     */
     #define MAX 1000
-    void morris_preorderTraversal(const struct TreeNode* root, int* data, int* p_num){
+    void morris_inorderTraversal(const struct TreeNode* root, int* data, int* p_num){
         struct TreeNode* cur = root;
         struct TreeNode* pre;
         while(cur){
@@ -222,27 +214,27 @@
                 }
                 /* 2.(a)*/
                 if(pre->right == NULL){
-                    *(data + *p_num) = cur->val;
-                    *p_num += 1;
                     pre->right = cur;
                     cur = cur->left;
                 }
                 /* 2.(b)*/
                 else{
                     pre->right = NULL;
-                    
+                    *(data + *p_num) = cur->val;
+                    *p_num += 1;
                     cur = cur->right;
                 }
             }
-        }   
+        }
+        
     }
-    int* preorderTraversal(struct TreeNode* root, int* returnSize) {
-        int* pre_traverse = (int*)malloc(sizeof(int)*MAX);
-        assert(NULL != pre_traverse);//断言机制
+    int* inorderTraversal(struct TreeNode* root, int* returnSize) {
+        int* mid_traverse = (int*)malloc(sizeof(int)*MAX);
+        assert(NULL != mid_traverse);//断言机制
         int num = 0;
-        morris_preorderTraversal(root, pre_traverse, &num);
+        morris_inorderTraversal(root, mid_traverse, &num);
         *returnSize = num;
-        return pre_traverse;
+        return mid_traverse;
     }
 
 #endif
