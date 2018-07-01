@@ -1,0 +1,267 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+/*
+ * 递归算法
+ * 1. 先递归左孩子
+ * 2. 接着，再递归右孩子
+ * 3. 把root的数据保存下来，计数加1
+ */
+#define RECURSIVE 1 
+/*
+ * 基于链栈的非递归算法
+ * 递归其实就是压栈出栈的过程，所以该实现方法其实就是自己写堆栈，注意堆栈的元素是struct TreeNode*类型的。
+ * 将前序遍历的左右孩子替换再反序输出即可
+ */
+#define LIST_STACK 2
+/*
+ * Morris Traversal
+ * 参考来源:二叉树的遍历https://blog.csdn.net/yc461515457/article/details/78082042
+ * 1. 如果当前节点的右孩子为空，记录当前节点，并将其左孩子作为当前节点。
+ * 2. 如果当前节点的左孩子不为空，在当前节点的左子树中找到当前节点在中序遍历下的前驱节点。
+ * a) 如果前驱节点的右孩子为空，记录当前节点，并将它的右孩子设置为当前节点。当前节点更新为当前节点的左孩子。
+ * b) 如果前驱节点的右孩子为当前节点，将它的右孩子重新设为空（恢复树的形状）。当前节点更新为当前节点的右孩子。
+ * 3. 重复以上1、2直到当前节点为空。
+ * 其与先序遍历的差别只是数据记录节点不一样，先序遍历记录节点在1和2(a)，中序遍历记录节点在1和2(b)。
+ */
+#define MORRIS 3
+
+#define ALGO_SEL 3
+
+#if ALGO_SEL == RECURSIVE
+    #define MAX 1000
+    /*
+     * 先序递归的数据处理程序
+     */
+    void sub_postorderTraversal(const struct TreeNode* root, int* data, int* p_num){
+        if(root == NULL)
+            return ;
+        /*
+         * 1. 先递归左孩子
+         * 2. 接着，再递归右孩子
+         * 3. 把root的数据保存下来，计数加1
+         */
+        
+        sub_postorderTraversal(root->left,  data, p_num);
+        sub_postorderTraversal(root->right, data, p_num);
+        *(data + *p_num) = root->val;
+        *p_num += 1;
+    }
+
+    /**
+     * Return an array of size *returnSize.
+     * Note: The returned array must be malloced, assume caller calls free().
+     */
+    
+    int* postorderTraversal(struct TreeNode* root, int* returnSize) {
+        int* post_traverse = (int*)malloc(sizeof(int)*MAX);
+        assert(NULL != post_traverse);//断言机制
+        int num = 0;
+        sub_postorderTraversal(root, post_traverse, &num);
+        *returnSize = num;
+        return post_traverse;
+    }
+
+#elif ALGO_SEL == LIST_STACK
+    #include<assert.h>
+    #include<stdio.h>
+    #include<stdlib.h>
+    /*
+     * 这是一个带有空头结点的链栈库
+     */
+    #define DATA_TYPE struct TreeNode*
+    #define MAX_DATA_LEN 1000
+    typedef struct stack_tag* p_stack;
+    /*
+     * 链栈结构体
+     */
+    typedef struct stack_tag{
+        DATA_TYPE data;
+        p_stack next;
+    }stack;
+
+    /*
+     * 链栈的初始化
+     * 初始化失败返回-1
+     */
+    p_stack stack_init(void){
+        p_stack head = (p_stack)malloc(sizeof(stack));
+        if(head == NULL){
+            printf("malloc head memory error!\n");
+            return -1;
+        }
+        head->data = 0;//头空节点的数据初始化为0，代表数据无效
+        head->next = NULL;
+        return head;
+    }
+
+    /*
+     * 判断链栈是否为空
+     */
+    int stack_is_empty(p_stack head){
+        return (NULL == (head->next));
+    }
+
+    /*
+     * 往链栈插入一个数据
+     * 插入成功，返回1
+     * 数据内存申请失败，返回0
+     * 链栈满了，则误差插入，返回-1
+     */
+    int stack_push(p_stack head, DATA_TYPE insert_data){
+        if(stack_len(head) > MAX_DATA_LEN){
+            printf("list stack is full!\n");
+            return -1;
+        }
+
+        p_stack p_temp;
+        p_stack p_node = (p_stack)malloc(sizeof(stack));
+        if(NULL == p_node){
+            printf("malloc data:%d memory error!\n", insert_data);
+            return 0;
+        }
+
+        p_node->data = insert_data;
+
+        p_temp = head->next;
+        head->next = p_node;
+        p_node->next = p_temp;
+        return 1;
+    }
+
+    /*
+     * 往链栈弹出一个数据
+     * 若链栈为空，则返回-1
+     */
+    DATA_TYPE stack_pop(p_stack head){
+        if(stack_is_empty(head)){
+            printf("list stack is empty!\n");
+            return -1;
+        }
+        DATA_TYPE head_data = head->next->data;
+        p_stack p_temp;
+        p_temp = head->next;
+        head->next = p_temp->next;
+        free(p_temp);
+        return head_data;
+    }
+
+    /*
+     * 获取链栈的长度
+     */
+    int stack_len(p_stack head){
+        int len = 0;
+        p_stack tmp = head;
+        while(tmp->next){
+            len++;
+            tmp = tmp->next; 
+        }
+        return len;
+    }
+    void inverse(int* data, int num){
+        int group = num/2;
+        for(int i=0; i<group; i++){
+            int tmp = data[i];
+            data[i] = data[num-1-i];
+            data[num-1-i] = tmp;
+        }
+    }
+    void list_stack_postorderTraversal(const struct TreeNode* root, int* data, int* p_num){
+        p_stack head = stack_init();
+        assert(-1 != head);
+        struct TreeNode* tmp = root;
+        while(tmp || !stack_is_empty(head)){
+            if(!tmp){
+                tmp = stack_pop(head);
+            }
+            /*
+             * 记录当前节点
+             */
+            *(data + *p_num) = tmp->val;
+            *p_num += 1;
+
+            if(tmp->left != NULL){ //右边节点非空，则入栈
+                stack_push(head, tmp->left);
+            }
+            tmp = tmp->right;
+        }
+        inverse(data, *p_num);
+    }
+    
+    int* postorderTraversal(struct TreeNode* root, int* returnSize){
+        int* post_traverse = (int*)malloc(sizeof(int)*MAX_DATA_LEN);
+        assert(NULL != post_traverse);//断言机制
+        int num = 0;
+        list_stack_postorderTraversal(root, post_traverse, &num);
+        *returnSize = num;
+        return post_traverse;
+    }
+
+#elif ALGO_SEL == MORRIS
+   /*
+    * 1. 如果当前节点的右孩子为空，记录当前节点，并将其左孩子作为当前节点。
+    * 2. 如果当前节点的右孩子不为空，在当前节点的右子树中找到当前节点在中序遍历下的前驱节点。
+    * a) 如果前驱节点的左孩子为空，记录当前节点，并将它的左孩子设置为当前节点。当前节点更新为当前节点的右孩子。
+    * b) 如果前驱节点的左孩子为当前节点，将它的左孩子重新设为空（恢复树的形状）。当前节点更新为当前节点的左孩子。
+    * 3. 重复以上1、2直到当前节点为空。
+    * 4. 反转记录的数据
+    * 其与先序遍历左右孩子互换即可
+    *
+    */
+    #define MAX 1000
+    void inverse(int* data, int num){
+        int group = num/2;
+        for(int i=0; i<group; i++){
+            int tmp = data[i];
+            data[i] = data[num-1-i];
+            data[num-1-i] = tmp;
+        }
+    }
+    void morris_postorderTraversal(const struct TreeNode* root, int* data, int* p_num){
+        struct TreeNode* cur = root;
+        struct TreeNode* pre;
+        while(cur){
+            if(cur->right == NULL){
+                *(data + *p_num) = cur->val;
+                *p_num += 1;
+                cur = cur->left;
+            }
+            else{
+                /*
+                 * 寻找前驱节点
+                 */
+                pre = cur->right;
+                while(pre->left!=NULL && pre->left!=cur){
+                    pre = pre->left;
+                }
+                /* 2.(a)*/
+                if(pre->left == NULL){
+                    *(data + *p_num) = cur->val;
+                    *p_num += 1;
+                    pre->left = cur;
+                    cur = cur->right;
+                }
+                /* 2.(b)*/
+                else{
+                    pre->left = NULL;
+                    cur = cur->left;
+                }
+            }
+        }
+        inverse(data, *p_num);
+    }
+    int* postorderTraversal(struct TreeNode* root, int* returnSize) {
+        int* post_traverse = (int*)malloc(sizeof(int)*MAX);
+        assert(NULL != post_traverse);//断言机制
+        int num = 0;
+        morris_postorderTraversal(root, post_traverse, &num);
+        *returnSize = num;
+        return post_traverse;
+    }
+#endif
