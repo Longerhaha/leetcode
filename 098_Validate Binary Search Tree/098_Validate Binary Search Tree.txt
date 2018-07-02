@@ -1,0 +1,78 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+#define MAX(a, b) ((a)>(b) ? (a):(b))
+#define MIN(a, b) ((a)>(b) ? (b):(a))
+/*
+ * 寻找左子树的最大值
+ */
+int left_max(struct TreeNode* root){
+    int max = root->val;
+    while(root->right){
+        max = MAX(max, root->right->val);
+        root = root->right;
+    }
+    return max;
+}
+/*
+ * 寻找右子树的最小值
+ */
+int right_min(struct TreeNode* root){
+    int min = root->val;
+    while(root->left){
+        min = MIN(min, root->left->val);
+        root = root->left;
+    }
+    return min;
+}
+/*
+ * 以下情况为返回false：
+ * 1.有左子树，但是左子树的最大值大于等于根的值
+ * 2.有右子树，但是右子树的最小值大于等于根的值
+ * 3.左子树无效或者右子树无效
+ * 其他情况都返回真
+ */
+bool isValidBST(struct TreeNode* root) {
+    if(root == NULL)
+        return true;
+    
+    if(root->left != NULL && left_max(root->left) >= root->val)
+        return false;
+    
+    if(root->right != NULL && root->val >= right_min(root->right))
+        return false;
+    
+    if(!isValidBST(root->right) || !isValidBST(root->left))
+        return false;
+    
+    return true;
+    
+    /* 两种方法都可以
+     *下面速度快，上面速度稍微慢一点
+    if(root->left == NULL){
+        if(root->right == NULL)
+            return true;
+        else if(root->val >= right_min(root->right))
+            return false;
+        else
+            return isValidBST(root->right);
+        
+    }
+    else{
+        if(left_max(root->left) >= root->val)
+            return false;
+        else if(root->right == NULL)
+            return isValidBST(root->left);
+        else{
+            if(root->val >= right_min(root->right))
+                return false;
+            else
+                return (isValidBST(root->left) && isValidBST(root->right));
+        }   
+    }  */ 
+}
