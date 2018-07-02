@@ -1,0 +1,88 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+/*
+ * 1.中序遍历
+ * 2.当当前值比前一个值小的时候，前一个值要和后面的交换。
+ * 3.再往后遍历，当当前值比前一个数小的时候，说明找到了第二个结点。然后将找到的两个结点交换。
+ */
+
+void swap(int* data1, int* data2){
+    int tmp = *data1;
+    *data1 = *data2;
+    *data2 = tmp;
+}
+/*
+ * 利用Morris中序遍历恢复二叉搜索树
+ */
+void recoverTree(struct TreeNode* root) {
+    struct TreeNode* cur = root;
+    struct TreeNode* pre = root;
+    struct TreeNode* old_cur = NULL, *p_first, *p_second;
+    //为未找到状态
+    p_first = NULL;
+    p_second = NULL;
+
+    while(cur){
+        if(cur->left == NULL){
+            /*
+             * 当当前值比前一个值小的时候，前一个值要和后面的交换
+             */
+            if(cur && old_cur && (old_cur->val > cur->val)){
+                if(p_first != NULL){
+                    p_second = cur;
+                }
+                //找第一个交换点时，因为其后面可能是第二个交换点，所以把他认为是第二个交换点，若其确实不是交换点，则会被后续真实的第二个交换点覆盖
+                else{
+                    p_first = old_cur;
+                    p_second = cur;
+                }
+                    
+            }
+            old_cur = cur;
+            cur = cur->right;
+            
+                
+        }
+        else{
+            /*
+             * 寻找前驱节点
+             */
+            pre = cur->left;
+            while(pre->right!=NULL && pre->right!=cur){
+                pre = pre->right;
+            }
+            /* 2.(a)*/
+            if(pre->right == NULL){
+                pre->right = cur;
+                cur = cur->left;
+            }
+            /* 2.(b)*/
+            else{
+                pre->right = NULL;
+                if(cur && old_cur && (old_cur->val > cur->val)){
+                    if(p_first != NULL){
+                        p_second = cur;
+                    } 
+                    else{
+                        p_first = old_cur;
+                        p_second = cur;
+                    }
+                          
+                }
+                old_cur = cur;
+                cur = cur->right;
+            }
+        }
+    }
+    if(p_first && p_second)
+        swap(&p_first->val, &p_second->val);
+    else
+        printf("error!\n");
+}
