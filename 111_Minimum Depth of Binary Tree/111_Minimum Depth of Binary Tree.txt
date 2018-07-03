@@ -1,0 +1,33 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+#define MIN(a, b) ((a)>(b) ? (b):(a))
+/*
+ * 递归遍历叶子节点，然后比较叶子节点的深度
+ */
+void minDepth_recurse(struct TreeNode* root, int depth, int* p_min_depth){
+    /*
+     * 到叶子节点了，返回最小深度
+     */
+    if(root->left==NULL && root->right==NULL){
+        if(depth < *p_min_depth)
+            *p_min_depth = depth;
+        return ;
+    }
+    if(root->left)
+        minDepth_recurse(root->left, depth+1, p_min_depth);
+    if(root->right)
+        minDepth_recurse(root->right, depth+1, p_min_depth);        
+}
+int minDepth(struct TreeNode* root) {
+    if(root == NULL)
+        return 0;
+    int min_depth = 10000;
+    minDepth_recurse(root, 1, &min_depth);
+    return min_depth;
+}
