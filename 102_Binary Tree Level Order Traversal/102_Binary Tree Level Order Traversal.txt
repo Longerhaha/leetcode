@@ -1,0 +1,240 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+#define RECURSE 1  /*测试数据卡这种办法，有高度非常大的偏斜树和高度较大的完美二叉树*/
+#define QUEUE   2
+
+#define ALGO_SEL 2
+
+#if ALGO_SEL == RECURSE
+    void levelOrder_recurse(int** data, const struct TreeNode* root, int** columnSizes, int* max_depth, int depth){
+        if(root == NULL)
+            return ;
+        //获取最大深度
+        if(*max_depth < depth)
+            *max_depth = depth;
+        //赋值
+        data[depth][(*columnSizes)[depth]] = root->val;
+        (*columnSizes)[depth] += 1;
+        //递归左、右子树
+        levelOrder_recurse(data, root->left,  columnSizes, max_depth, depth+1);
+        levelOrder_recurse(data, root->right, columnSizes, max_depth, depth+1);
+    }
+
+
+    /**
+     * Return an array of arrays of size *returnSize.
+     * The sizes of the arrays are returned as *columnSizes array.
+     * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+     */
+    #define MAX_RES 1000
+    int** levelOrder(struct TreeNode* root, int** columnSizes, int* returnSize) {
+        if(root == NULL){
+            *returnSize = 0;
+            return NULL;
+        }
+
+        int** res = (int**)malloc(sizeof(int*)*MAX_RES);
+        assert(res != NULL);
+
+        *columnSizes = (int*)malloc(sizeof(int)*MAX_RES);
+        assert(*columnSizes != NULL);
+        for(int i=0; i<MAX_RES; i++){
+            (*columnSizes)[i] = 0;
+        }
+        for(int i=0; i<MAX_RES; i++){
+            res[i] = (int*)malloc(sizeof(int)*100);//(int)(pow(2, i))
+            assert(res[i] != NULL);
+        }
+
+        int max_depth = 0;
+        levelOrder_recurse(res, root, columnSizes, &max_depth, 0);
+        //printf("%d\n", max_depth);
+        *returnSize = max_depth + 1;
+        return res;
+    }
+#elif ALGO_SEL == QUEUE
+
+    #define MAX_RES 1000
+    #include<assert.h>
+    #include<stdio.h>
+    #include<stdlib.h>
+    /*
+     * 这是一个带有链队信息结点的链队列文件
+     */
+    #define DATA_TYPE struct TreeNode* 
+    #define MAX_DATA_LEN 1000
+    typedef struct queue_node_tag* p_queue_node;
+    /*
+     * 链队列结构体
+     */
+    typedef struct queue_node_tag{
+        DATA_TYPE data;
+        p_queue_node next;
+    }queue_node;
+    /*
+     * 链队列的信息指针
+     * 链表的头、尾巴以及长度信息
+     */
+    typedef struct queue_tag* p_queue;
+    typedef struct queue_tag{
+        p_queue_node front;
+        p_queue_node rear;
+        int queue_num;
+    }queue;
+    /*
+     * 链队列的初始化
+     * 初始化失败停止程序，因为可能系统内存满了或者奔溃了
+     */
+    p_queue queue_init(void){
+        p_queue head = (p_queue)malloc(sizeof(queue));
+        assert(head != NULL);
+        head->front = NULL;
+        head->rear  = NULL;
+        head->queue_num = 0;
+        return head;
+    }
+
+    /*
+     * 判断链队列是否为空
+     */
+    int queue_is_empty(const p_queue head){
+        return (0 == head->queue_num);
+    }
+
+    /*
+     * 往链队列插入一个数据
+     * 插入成功，返回1
+     * 数据内存申请失败，返回0
+     * 队列满返回-1
+     */
+    int queue_push(p_queue head, const DATA_TYPE insert_data){
+
+        if(queue_is_full(head)){
+            printf("queue is full!\n");
+            return -1;
+        }
+        p_queue_node p_node = (p_queue_node)malloc(sizeof(queue_node));
+        if(NULL == p_node){
+            printf("malloc data:%d memory error!\n", insert_data);
+            return 0;
+        }
+        /*
+         * 插入到链队列尾巴
+         */
+        p_node->data = insert_data;
+        p_node->next = NULL;
+        /*
+         *不是第一次插入
+         */
+        if(head->rear != NULL){
+            head->rear->next = p_node;
+            head->rear = p_node;
+        } 
+        /*
+         * 第一次插入
+         * 修正front与rear指针一样
+         */ 
+        else{
+            head->front = p_node;
+            head->rear  = p_node;
+        }
+        head->queue_num += 1;
+        return 1;
+    }
+
+    /*
+     * 往链队列弹出一个数据
+     * 即从头出去
+     * 若链队列为空，则返回-1
+     */
+    DATA_TYPE queue_pop(p_queue head){
+        if(queue_is_empty(head)){
+            printf("list queue_node is empty!\n");
+            return -1;
+        }
+        DATA_TYPE head_data = head->front->data;
+        p_queue_node p_temp;
+        p_temp = head->front;
+        head->front = p_temp->next;
+        /* 
+         * 如果是最后一个数据从队列出去
+         * 修正一下rear指针为NULL
+         */
+        if(head->front == NULL){
+            head->rear = NULL;
+        }
+        free(p_temp);
+        head->queue_num -= 1;
+        return head_data;
+    }
+
+    /*
+     * 返回链队列的头结点数据
+     * 若链队列为空，则返回-1
+     */
+    DATA_TYPE queue_top_element(const p_queue head){
+        if(queue_is_empty(head)){
+            printf("list queue is empty!\n");
+            return -1;
+        }
+        else
+            return head->front->data;
+    }
+
+    /*
+     * 判断链队列是否满
+     */
+    int queue_is_full(const p_queue head){
+        return (head->queue_num > MAX_DATA_LEN);
+    }
+
+    /*
+     * 利用队列与BFS实现二叉树的深度遍历
+     */
+    int levelOrder_queue_traverse(int** res, int** columnSizes, const p_queue head, const struct TreeNode* root){
+        queue_push(head, root);
+        int depth = 0;
+        while(!queue_is_empty(head)){
+            (*columnSizes)[depth] = head->queue_num;
+            res[depth] = (int*)malloc(sizeof(int)*(head->queue_num));
+            assert(res[depth] != NULL);
+            for(int i=0; i<(*columnSizes)[depth]; i++){
+                struct TreeNode* tmp = queue_pop(head);
+                res[depth][i] = tmp->val;
+                if(tmp->left)
+                    queue_push(head, tmp->left);
+                if(tmp->right)
+                    queue_push(head, tmp->right);
+            }
+            depth++;//遍历下一层
+        }
+        return depth;
+    }
+        
+    int** levelOrder(struct TreeNode* root, int** columnSizes, int* returnSize) {
+        if(root == NULL){
+            *returnSize = 0;
+            return NULL;
+        }
+        
+        int** res = (int**)malloc(sizeof(int*)*MAX_RES);
+        assert(res != NULL);
+
+        *columnSizes = (int*)malloc(sizeof(int)*MAX_RES);
+        assert(*columnSizes != NULL);
+        /*
+         * 先建立链队列
+         */
+        p_queue head = queue_init();
+        *returnSize = levelOrder_queue_traverse(res, columnSizes, head, root);
+        return res;
+    }
+
+#endif
