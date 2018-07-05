@@ -1,0 +1,304 @@
+#define MAX_RES 1000
+/*
+ * 102题的变形
+ * 使用双端队列
+ * 偶数层(0,2,4....)正序出队，正序进队
+ * 奇数层(1,3,5....)逆序出队，右孩子先进队
+ */
+#include<assert.h>
+#include<stdio.h>
+#include<stdlib.h>
+/*
+ * 这是一个带有链队信息结点的双端链队文件
+ * dqueue双端链队
+ * 从队头出去，尾巴进来是正序队列
+ * 从尾巴出去，队头进来是逆序队列
+ */
+#define DATA_TYPE struct TreeNode* 
+#define MAX_DATA_LEN 1000
+typedef struct dqueue_node_tag* p_dqueue_node;
+/*
+ * 双端链队结构体
+ */
+typedef struct dqueue_node_tag{
+    DATA_TYPE data;
+    p_dqueue_node next;
+	p_dqueue_node inv_next;
+}dqueue_node;
+/*
+ * 双端链队链队的信息指针
+ * 双端链队链队的头、尾巴以及长度信息
+ */
+typedef struct dqueue_tag* p_dqueue;
+typedef struct dqueue_tag{
+    p_dqueue_node front;
+    p_dqueue_node rear;
+	int dqueue_num;
+}dqueue;
+/*
+ * 双端链队的初始化
+ * 初始化失败停止程序，因为可能系统内存满了或者奔溃了
+ */
+p_dqueue dqueue_init(void){
+    p_dqueue head = (p_dqueue)malloc(sizeof(dqueue));
+	assert(head != NULL);
+    head->front = NULL;
+    head->rear  = NULL;
+	head->dqueue_num = 0;
+    return head;
+}
+
+/*
+ * 判断双端链队是否为空
+ */
+int dqueue_is_empty(p_dqueue head){
+    return (0 == head->dqueue_num);
+}
+
+/*
+ * 判断双端链队是否满
+ */
+int dqueue_is_full(p_dqueue head){
+    return (head->dqueue_num >= MAX_DATA_LEN);
+}
+/*
+ * 往双端链队正序插入一个数据
+ * 插入成功，返回1
+ * 数据内存申请失败，返回0
+ * 队列满返回-1
+ */
+int dqueue_push(p_dqueue head, DATA_TYPE insert_data){
+
+    if(dqueue_is_full(head)){
+		printf("dqueue is full!\n");
+		return -1;
+	}
+    p_dqueue_node p_node = (p_dqueue_node)malloc(sizeof(dqueue_node));
+    if(NULL == p_node){
+		printf("malloc data:%d memory error!\n", insert_data);
+		return 0;
+	}
+	/*
+	 * 插入到链队尾巴
+	 */
+	p_node->data = insert_data;
+	p_node->next = NULL;
+	p_node->inv_next = NULL;
+	/*
+	 *不是第一次插入
+	 */
+	if(head->rear != NULL){
+		//双向操作
+		head->rear->next = p_node;
+		p_node->inv_next = head->rear;
+		head->rear = p_node;
+	}
+	/*
+	 * 第一次插入
+	 * 修正front与rear指针一样
+	 */ 
+    else{
+		head->front = p_node;
+		head->rear  = p_node;
+	}
+    head->dqueue_num += 1;
+    return 1;
+}
+
+/*
+ * 往双端链队逆序插入一个数据
+ * 插入成功，返回1
+ * 数据内存申请失败，返回0
+ * 队列满返回-1
+ */
+int dqueue_inv_push(p_dqueue head, DATA_TYPE insert_data){
+
+    if(dqueue_is_full(head)){
+		printf("dqueue is full!\n");
+		return -1;
+	}
+    p_dqueue_node p_node = (p_dqueue_node)malloc(sizeof(dqueue_node));
+    if(NULL == p_node){
+		printf("malloc data:%d memory error!\n", insert_data);
+		return 0;
+	}
+	/*
+	 * 反序插入到双端链队
+	 * 也就是插到头部
+	 */
+	p_node->data = insert_data;
+	p_node->next = NULL;
+	p_node->inv_next = NULL;
+	/*
+	 *不是第一次插入
+	 */
+	if(head->front != NULL){
+		//双向操作
+		p_node->next = head->front;
+		head->front->inv_next = p_node;
+		head->front = p_node;
+	} 
+	/*
+	 * 第一次插入
+	 * 修正front与rear指针一样
+	 */ 
+    else{
+		head->front = p_node;
+		head->rear  = p_node;
+	}
+    head->dqueue_num += 1;
+    return 1;
+}
+
+    
+/*
+ * 往双端链队正序弹出一个数据
+ * 即从头出去
+ * 若链队为空，则返回-1
+ */
+DATA_TYPE dqueue_pop(p_dqueue head){
+	if(dqueue_is_empty(head)){
+		printf("list dqueue_node is empty!\n");
+		return -1;
+	}
+    DATA_TYPE head_data = head->front->data;
+    p_dqueue_node p_temp;
+    p_temp = head->front;
+    head->front = p_temp->next;
+	
+	/* 
+	 * 如果是最后一个数据从队列出去
+	 * 修正一下rear指针为NULL
+	 */
+	if(head->front == NULL){
+		head->rear = NULL;
+	}
+	//因为是从头出去，所以下一个节点的inv_next要置为NULL
+	else{
+		head->front->inv_next = NULL;
+	}
+    free(p_temp);
+	head->dqueue_num -= 1;
+    return head_data;
+}
+ 
+/*
+ * 往双端链队逆序弹出一个数据
+ * 即从尾巴出去
+ * 若双端链队为空，则返回-1
+ */
+DATA_TYPE dqueue_inv_pop(p_dqueue head){
+	if(dqueue_is_empty(head)){
+		printf("list dqueue_node is empty!\n");
+		return -1;
+	}
+    DATA_TYPE head_data = head->rear->data;
+    p_dqueue_node p_temp;
+    p_temp = head->rear;
+	head->rear = p_temp->inv_next;
+	
+	/* 
+	 * 如果是最后一个数据从队列出去
+	 * 修正一下front指针为NULL
+	 */
+	if(head->rear == NULL){
+		head->front = NULL;
+	}
+	else{
+		head->rear->next = NULL;
+	}
+    free(p_temp);
+	head->dqueue_num -= 1;
+    return head_data;
+}
+
+ 
+/*
+ * 返回双端链队正序的头结点数据
+ * 若链队为空，则返回-1
+ */
+DATA_TYPE dqueue_top_element(p_dqueue head){
+    if(dqueue_is_empty(head)){
+		printf("list dqueue is empty!\n");
+		return NULL;
+	}
+    else
+        return head->front->data;
+}
+
+/*
+ * 返回双端链队逆序的头结点数据
+ * 若链队为空，则返回-1
+ */
+DATA_TYPE dqueue_inv_top_element(p_dqueue head){
+    if(dqueue_is_empty(head)){
+		printf("list dqueue is empty!\n");
+		return NULL;
+	}
+    else
+        return head->rear->data;
+}
+
+
+
+/*
+ * 利用队列与BFS实现二叉树的深度遍历
+ */
+int zigzagLevelOrder_queue_traverse(int** res, int** columnSizes, p_dqueue head, const struct TreeNode* root){
+    queue_push(head, root);
+    int depth = 0;
+    while(!queue_is_empty(head)){
+        (*columnSizes)[depth] = head->dqueue_num;
+        res[depth] = (int*)malloc(sizeof(int)*(head->dqueue_num));
+        assert(res[depth] != NULL);
+        /*顺序出队，顺序进队，左孩子先进队，右孩子后进队*/
+        if(depth%2 == 0){
+            for(int i=0; i<(*columnSizes)[depth]; i++){
+                struct TreeNode* tmp = dqueue_pop(head);
+                res[depth][i] = tmp->val;
+                if(tmp->left)
+                    dqueue_push(head, tmp->left);
+                if(tmp->right)
+                    dqueue_push(head, tmp->right);
+            }
+        }
+        /*逆序出队，右孩子先顺序进队，左孩子顺序进队*/
+        else{
+            for(int i=0; i<(*columnSizes)[depth]; i++){
+                struct TreeNode* tmp = dqueue_inv_pop(head);
+                res[depth][i] = tmp->val;
+                if(tmp->right)
+                    dqueue_push(head, tmp->right);
+                if(tmp->left)
+                    dqueue_push(head, tmp->left);
+
+            }
+        }
+        depth++;//遍历下一层
+    }
+    return depth;
+}
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */    
+int** zigzagLevelOrder(struct TreeNode* root, int** columnSizes, int* returnSize) {
+    if(root == NULL){
+        *returnSize = 0;
+        return NULL;
+    }
+
+    int** res = (int**)malloc(sizeof(int*)*MAX_RES);
+    assert(res != NULL);
+
+    *columnSizes = (int*)malloc(sizeof(int)*MAX_RES);
+    assert(*columnSizes != NULL);
+    /*
+     * 先建立链队列
+     */
+    p_dqueue head = dqueue_init();
+    *returnSize = zigzagLevelOrder_queue_traverse(res, columnSizes, head, root);
+    return res;
+}
+
