@@ -154,12 +154,12 @@ int dqueue_inv_push(p_dqueue head, DATA_TYPE insert_data){
 /*
  * 往双端链队正序弹出一个数据
  * 即从头出去
- * 若链队为空，则返回-1
+ * 若链队为空，则返回空
  */
 DATA_TYPE dqueue_pop(p_dqueue head){
 	if(dqueue_is_empty(head)){
 		printf("list dqueue_node is empty!\n");
-		return -1;
+		return (DATA_TYPE)NULL;
 	}
     DATA_TYPE head_data = head->front->data;
     p_dqueue_node p_temp;
@@ -185,12 +185,12 @@ DATA_TYPE dqueue_pop(p_dqueue head){
 /*
  * 往双端链队逆序弹出一个数据
  * 即从尾巴出去
- * 若双端链队为空，则返回-1
+ * 若双端链队为空，则返回空
  */
 DATA_TYPE dqueue_inv_pop(p_dqueue head){
 	if(dqueue_is_empty(head)){
 		printf("list dqueue_node is empty!\n");
-		return -1;
+		return (DATA_TYPE)NULL;
 	}
     DATA_TYPE head_data = head->rear->data;
     p_dqueue_node p_temp;
@@ -215,12 +215,12 @@ DATA_TYPE dqueue_inv_pop(p_dqueue head){
  
 /*
  * 返回双端链队正序的头结点数据
- * 若链队为空，则返回-1
- */
+ * 若链队为空，则返回空
+ */ 
 DATA_TYPE dqueue_top_element(p_dqueue head){
     if(dqueue_is_empty(head)){
 		printf("list dqueue is empty!\n");
-		return NULL;
+		return (DATA_TYPE)NULL;
 	}
     else
         return head->front->data;
@@ -228,27 +228,26 @@ DATA_TYPE dqueue_top_element(p_dqueue head){
 
 /*
  * 返回双端链队逆序的头结点数据
- * 若链队为空，则返回-1
+ * 若链队为空，则返回空
  */
 DATA_TYPE dqueue_inv_top_element(p_dqueue head){
     if(dqueue_is_empty(head)){
 		printf("list dqueue is empty!\n");
-		return NULL;
+		return (DATA_TYPE)NULL;
 	}
     else
         return head->rear->data;
 }
 
-
-
 /*
  * 利用队列与BFS实现二叉树的深度遍历
  */
-int zigzagLevelOrder_queue_traverse(int** res, int** columnSizes, p_dqueue head, const struct TreeNode* root){
-    queue_push(head, root);
+int zigzagLevelOrder_queue_traverse(int** res, int** columnSizes, p_dqueue head, struct TreeNode* root){
+    dqueue_push(head, root);
     int depth = 0;
-    while(!queue_is_empty(head)){
+    while(!dqueue_is_empty(head)){
         (*columnSizes)[depth] = head->dqueue_num;
+        printf("%d\n", head->dqueue_num);
         res[depth] = (int*)malloc(sizeof(int)*(head->dqueue_num));
         assert(res[depth] != NULL);
         /*顺序出队，顺序进队，左孩子先进队，右孩子后进队*/
@@ -262,16 +261,15 @@ int zigzagLevelOrder_queue_traverse(int** res, int** columnSizes, p_dqueue head,
                     dqueue_push(head, tmp->right);
             }
         }
-        /*逆序出队，右孩子先顺序进队，左孩子顺序进队*/
+        /*逆序出队，右孩子先逆序进队，左孩子逆序进队*/
         else{
             for(int i=0; i<(*columnSizes)[depth]; i++){
                 struct TreeNode* tmp = dqueue_inv_pop(head);
                 res[depth][i] = tmp->val;
                 if(tmp->right)
-                    dqueue_push(head, tmp->right);
+                    dqueue_inv_push(head, tmp->right);
                 if(tmp->left)
-                    dqueue_push(head, tmp->left);
-
+                    dqueue_inv_push(head, tmp->left);
             }
         }
         depth++;//遍历下一层
