@@ -1,0 +1,77 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+#define MAX_RES 500
+#define MAX_DEPTH 2000
+/*
+ * 深度递归遍历
+ * 递归结束条件：
+ *     到了叶子节点后，判断root->val + fthr_val是否与sum相同,如果相同则（1）记录当前路径节点；（2）恢复当前递归存储路径，继续下一条路径的查找
+ * 在未到叶子节点前，记录当前的路径并
+ */
+void hasPathSum_dfs(int** res, int** columnSizes, const struct TreeNode* root, const int sum, int fthr_val, int depth, int* p_sum_path_num){
+    /*
+     * 到了叶子节点
+     * 直接判断加上当前val后是否与sum一致
+     */
+    if(root->left==NULL && root->right==NULL){
+        if(root->val+fthr_val == sum){
+            //记录叶子节点
+            res[*p_sum_path_num][depth] = root->val;
+            /*
+             * 找到了一条路径，并复制当前递归路径，寻找下一条路径
+             */
+            (*columnSizes)[*p_sum_path_num] = depth + 1;
+            *p_sum_path_num += 1;
+            res[*p_sum_path_num] = (int*)malloc(sizeof(int)*MAX_DEPTH);
+            assert(res[*p_sum_path_num] != NULL);
+            for(int i=0; i<=depth; i++)
+                res[*p_sum_path_num][i] = res[*p_sum_path_num-1][i];
+        }
+        return ;
+    }
+    /*
+     * 更新权值
+     */
+    fthr_val += root->val;
+    /*
+     * 存储当前递归路径节点
+     */
+    res[*p_sum_path_num][depth] = root->val;
+    bool left = false;
+    bool right = false;
+    if(root->left)
+        hasPathSum_dfs(res, columnSizes, root->left, sum, fthr_val, depth+1, p_sum_path_num);
+    if(root->right)
+        hasPathSum_dfs(res, columnSizes, root->right, sum, fthr_val, depth+1, p_sum_path_num); 
+}
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** pathSum(struct TreeNode* root, int sum, int** columnSizes, int* returnSize) {
+    if(root == NULL){
+        *returnSize = 0;
+        return NULL;
+    }
+
+    int** res = (int**)malloc(sizeof(int*)*MAX_RES);
+    assert(res != NULL);
+
+    *columnSizes = (int*)malloc(sizeof(int)*MAX_RES);
+    assert(*columnSizes != NULL);
+    
+    res[0] = (int*)malloc(sizeof(int)*MAX_DEPTH);
+    assert(res[0] != NULL);
+    
+    int sum_path_num = 0;
+    hasPathSum_dfs(res, columnSizes, root, sum, 0, 0, &sum_path_num);
+    *returnSize = sum_path_num;
+    return res;
+}
