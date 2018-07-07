@@ -1,0 +1,43 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+/*
+ * 深度递归遍历
+ * 递归结束条件：
+ *     到了叶子节点后，判断root->val + fthr_val是否与sum相同
+ * 在未到叶子节点前，则记录其左右子树的叶子节点是否能与sum相同，并返回二者的或值
+ */
+bool hasPathSum_dfs(struct TreeNode* root, const int sum, int fthr_val){
+    /*
+     * 到了叶子节点
+     * 直接判断加上当前val后是否与sum一致
+     */
+    if(root->left==NULL && root->right==NULL){
+        return root->val+fthr_val == sum;
+    }
+    /*
+     * 更新权值
+     */
+    fthr_val += root->val;
+    bool left = false;
+    bool right = false;
+    if(root->left)
+        left  = hasPathSum_dfs(root->left, sum, fthr_val);
+    if(root->right)
+        right = hasPathSum_dfs(root->right, sum, fthr_val);
+    return left || right;
+    
+}
+
+bool hasPathSum(struct TreeNode* root, int sum) {
+    if(root == NULL)
+        return false;
+    int fthr_val = 0;
+    return hasPathSum_dfs(root, sum, fthr_val);
+}
