@@ -1,0 +1,31 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+#define ABS(a) ((a)>=0 ? (a):-(a))
+#define MAX(a, b) ((a)>=(b) ? (a):(b))
+/*
+ * 获取树的高度：只有一个节点算1, NULL算0
+ */
+int get_tree_depth(struct TreeNode* root){
+    if(root==NULL)
+        return 0;
+    int left_depth =  get_tree_depth(root->left) + 1;
+    int right_depth = get_tree_depth(root->right) + 1;
+    return MAX(left_depth, right_depth);
+}
+
+bool isBalanced(struct TreeNode* root) {
+    if(NULL == root)
+        return true;
+    int left_high = get_tree_depth(root->left);
+    int right_high = get_tree_depth(root->right);
+    if(ABS(left_high-right_high) > 1)
+        return false;
+    else 
+        return isBalanced(root->left) && isBalanced(root->right);
+}
