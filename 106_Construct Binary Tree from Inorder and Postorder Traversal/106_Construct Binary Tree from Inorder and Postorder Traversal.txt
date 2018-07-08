@@ -1,0 +1,30 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+/*
+ * 根据后续遍历最后一个值在中序遍历的位置兵分两路，左右递归
+ */
+struct TreeNode* buildTree(int* inorder, int inorderSize, int* postorder, int postorderSize) {
+    if(postorderSize == 0)
+        return (struct TreeNode*)NULL;
+    struct TreeNode* root = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    assert(root != NULL);
+    root->val = postorder[postorderSize-1];
+    /*
+     * 寻找中序遍历与postorder[postorderSize-1]相等的点
+     */
+    int pos = 0;
+    /*
+     * pos等于0说明其没有左子树了，但是还可能有右子树，这时候需要根据postorderSize判断
+     */
+    for(; pos<inorderSize && inorder[pos]!=postorder[postorderSize-1]; pos++) ;
+    //printf("%d %d %d\n", preorderSize, pos, *preorder);
+    root->left  = pos==0 ? (struct TreeNode*)NULL:buildTree(inorder, pos, postorder, pos);
+    root->right = (pos==0 && postorderSize==1) ? (struct TreeNode*)NULL:buildTree(inorder+pos+1, inorderSize-pos-1, postorder+pos, postorderSize-pos-1);
+    return root;
+}
