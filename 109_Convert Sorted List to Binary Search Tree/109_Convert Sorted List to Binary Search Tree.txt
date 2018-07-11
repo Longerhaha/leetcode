@@ -1,0 +1,87 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+#define BINARY 1
+#define DFS 2
+#define ALGO_SEL 2
+/*
+ * 获取链表的长度
+ */
+int linkedlist_len(struct ListNode* head){
+    int len = 0;
+    while(head){
+        head = head->next;
+        len++;
+    }
+    return len;
+}
+
+#if ALGO_SEL == BINARY //所有样例运行时间300ms
+    /*
+     * 从链表中找出第k个元素
+     * 第0个元素是头
+     */
+    int find(struct ListNode* head, int k){
+        for(int i=0; i<k; i++){
+            head = head->next;
+        }
+        return head->val;
+    }
+    
+
+    /*
+     * 使用二分法将链表转化为平衡二叉搜索树
+     */
+    struct TreeNode* linkedlist_to_BBST(struct ListNode* head, int start, int end){
+        struct TreeNode* pnode = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+        assert(pnode != NULL);
+        int mid = (start+end)/2;
+        pnode->val = find(head, mid);
+        pnode->left = start==mid ? NULL:linkedlist_to_BBST(head, start, mid-1);
+        pnode->right = mid==end? NULL:linkedlist_to_BBST(head, mid+1, end);
+        return pnode;
+    }
+
+    struct TreeNode* sortedListToBST(struct ListNode* head) {
+        if(head == NULL) 
+            return (struct TreeNode*)NULL;
+        else
+            return linkedlist_to_BBST(head, 0, linkedlist_len(head)-1);
+    }
+#elif ALGO_SEL == DFS //所有样例运行时间8ms
+
+    /*
+     * 使用DFS将链表转化为平衡二叉搜索树
+     */
+    struct TreeNode* linkedlist_to_BBST(struct ListNode** phead, int size){
+        if(size == 0)
+            return (struct TreeNode*)NULL;
+        struct TreeNode* pnode = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+        assert(pnode != NULL);
+        pnode->left = linkedlist_to_BBST(phead, size/2);
+        pnode->val = (*phead)->val;
+        *phead = (*phead)->next;
+        pnode->right = linkedlist_to_BBST(phead, size-size/2-1);
+        return pnode;
+    }
+
+
+    struct TreeNode* sortedListToBST(struct ListNode* head) {
+        if(head == NULL) 
+            return (struct TreeNode*)NULL;
+        else
+            return linkedlist_to_BBST(&head, linkedlist_len(head));
+    }
+#endif
