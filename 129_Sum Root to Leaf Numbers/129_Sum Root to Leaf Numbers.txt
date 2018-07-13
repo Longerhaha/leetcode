@@ -1,0 +1,30 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+void sumNumbers_dfs(struct TreeNode* root, int curpath_sum, int* p_total_sum){
+    if(root->left==NULL && root->right==NULL){
+        *p_total_sum += curpath_sum*10 + root->val;
+        return ;
+    }
+
+    if(root->left)
+        sumNumbers_dfs(root->left, curpath_sum*10+root->val, p_total_sum);
+    
+    if(root->right)
+        sumNumbers_dfs(root->right, curpath_sum*10+root->val, p_total_sum);
+    
+}
+
+
+int sumNumbers(struct TreeNode* root) {
+    if(root == NULL)
+        return 0;
+    int pathsum = 0;
+    sumNumbers_dfs(root, 0, &pathsum);
+    return pathsum;
+}
