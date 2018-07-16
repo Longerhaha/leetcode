@@ -1,0 +1,36 @@
+/**
+ * Definition for binary tree with next pointer.
+ * struct TreeLinkNode {
+ *  int val;
+ *  struct TreeLinkNode *left, *right, *next;
+ * };
+ *
+ */
+
+/*
+ * two point to solve the problem 
+ * 从上到下（充分利用上层已调整的结果），从左到右一步步解决问题
+ */
+void connect(struct TreeLinkNode *root) {
+    if(root==NULL)
+        return ;
+    struct TreeLinkNode* p_level_bigin, *p_level_travese;
+    p_level_bigin = root;
+    while(p_level_bigin->left){
+        //开始本层的搜索
+        p_level_travese = p_level_bigin;
+        while(p_level_travese){
+            /* 右孩子的next指向左孩子
+             * 如果其有next指针，则其右孩子的next指向其next的左孩子
+             * 继续同层下一节点的搜索
+             */
+            p_level_travese->left->next = p_level_travese->right;
+            if(p_level_travese->next)
+                p_level_travese->right->next = p_level_travese->next->left;
+            p_level_travese = p_level_travese->next;
+        }
+        //继续下一层的搜索
+        p_level_bigin = p_level_bigin->left;
+    }
+    
+}
