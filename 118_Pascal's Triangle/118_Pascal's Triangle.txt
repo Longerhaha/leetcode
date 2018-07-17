@@ -1,0 +1,27 @@
+/**
+ * Return an array of arrays.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** generate(int numRows, int** columnSizes) {
+    int** data = (int**)malloc(sizeof(int*)*numRows);
+    assert(data != NULL);
+    *columnSizes = (int*)malloc(sizeof(int)*numRows);
+    assert(*columnSizes != NULL);
+    
+    for(int i=0; i<numRows; i++){
+        data[i] = (int*)malloc(sizeof(int)*(i+1));
+        assert(data[i] != NULL);
+        (*columnSizes)[i] = i+1;
+        //左、右两个1
+        data[i][0] = 1;
+        data[i][i] = 1;
+        //左部分递推公式
+        for(int j=1; j<=i/2; j++)
+            data[i][j] = data[i-1][j-1] + data[i-1][j];
+        //利用对称性
+        for(int j=i/2+1; j<i; j++)
+            data[i][j] = data[i][i-j];
+    }
+    return data;
+}
