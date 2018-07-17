@@ -1,0 +1,86 @@
+/**
+ * Definition for binary tree with next pointer.
+ * struct TreeLinkNode {
+ *  int val;
+ *  struct TreeLinkNode *left, *right, *next;
+ * };
+ *
+ */
+
+
+/*
+ * two point to solve the problem 
+ * 从上到下（充分利用上层已调整的结果），从左到右一步步解决问题
+ * 与116题不一样的是树可能不是完全二叉树，所以需要调整
+ * until(最后一层)
+ *     在本层搜索的时候
+ *     （1）如果其有左右子树则左子树next直到右子树
+ *     （2）如果其同层后面有数据，i)若其有右子树则右子树next指向同层后的节点的最前一个子树，若都没有子树则指向null
+ *                          否则ii)若其有左子树则左子树next指向同层后的节点的最前一个子树，若都没有子树则指向null
+ *     然后寻找下一层的第一个节点
+ * 
+ */
+
+
+
+/*
+ * 找到下一层最靠左的节点，如果没有则返回NULL
+ */
+
+struct TreeLinkNode* find_next_head(struct TreeLinkNode* pre_head){
+    while(pre_head){
+        if(pre_head->left)
+            return pre_head->left;
+        else if(pre_head->right)
+            return pre_head->right;
+        else
+            pre_head = pre_head->next;
+    }
+    return (struct TreeLinkNode*)NULL;
+}
+
+/*
+ * 找到同层的下一个节点，如果没有则返回NULL
+ */
+struct TreeLinkNode* find_level_next(struct TreeLinkNode* pre){
+    if(pre == NULL)
+        return (struct TreeLinkNode*)NULL;
+    while(pre){
+        if(pre->left)
+            return pre->left;
+        else if(pre->right)
+            return pre->right;
+        else
+            pre = pre->next;
+    }
+    return (struct TreeLinkNode*)NULL;
+}
+
+void connect(struct TreeLinkNode *root) {
+    if(root==NULL)
+        return ;
+    struct TreeLinkNode* p_level_begin, *p_level_travese;
+    p_level_begin = root;
+    while(p_level_begin){
+        //开始本层的搜索
+        p_level_travese = p_level_begin;
+        while(p_level_travese){
+            /* 右孩子的next指向左孩子
+             * 如果其有next指针，则其右孩子的next指向其next的左孩子
+             * 继续同层下一节点的搜索
+             */
+            if(p_level_travese->left && p_level_travese->right)
+                p_level_travese->left->next = p_level_travese->right;
+            if(p_level_travese->next){
+                if(p_level_travese->right)
+                    p_level_travese->right->next = find_level_next(p_level_travese->next);
+                else if(p_level_travese->left)
+                    p_level_travese->left->next = find_level_next(p_level_travese->next);
+            }
+            p_level_travese = p_level_travese->next;
+        }
+        //继续下一层的搜索
+        p_level_begin = find_next_head(p_level_begin);
+    }
+    
+}
