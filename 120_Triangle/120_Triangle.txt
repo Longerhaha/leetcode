@@ -1,0 +1,43 @@
+#define MIN(a, b) ((a)>=(b) ? (b):(a))
+/*
+ * 寻找最后一行的最小路径和
+ */
+int get_min_path(int* p_path_sum, int path_num){
+    int min = p_path_sum[0];
+    for(int i=1; i<path_num; i++)
+        min = MIN(min, p_path_sum[i]);
+    return min;
+}
+/*
+ * pre_min_row指向上一行的最小路径和（数组形式）
+ * 然后利用pre_min_row和规则（每一步只能移动到下一行中相邻的结点上）进行计算
+ * 这个方法其实就是动态规划
+ * 因为有两个特点：
+ * 1.最优子结构
+ * 2.子问题重叠
+ */
+int minimumTotal(int** triangle, int triangleRowSize, int *triangleColSizes) {
+    int* pre_min_row = (int*)malloc(sizeof(int)*triangleRowSize);
+    assert(pre_min_row != NULL);
+    pre_min_row[0] = 0;
+    for(int i=0; i<triangleRowSize; i++){
+        int col = triangleColSizes[i];
+        int min_row[col];
+        /*
+         * 分为三种计算
+         * 最左边、中间与最右边
+         */
+        for(int j=0; j<col; j++){
+            if(j>0 && j< col-1)
+                min_row[j] = MIN(pre_min_row[j-1]+triangle[i][j], pre_min_row[j]+triangle[i][j]);
+            else if(j == 0)
+                min_row[0] = pre_min_row[0]+triangle[i][0];
+            else //j == col-1
+                min_row[col-1] = pre_min_row[col-2]+triangle[i][col-1] ;   
+        }
+        memcpy(pre_min_row, min_row, sizeof(int)*(i+1));
+    }
+    int min_path_sum = get_min_path(pre_min_row, triangleRowSize);
+    free(pre_min_row);
+    return min_path_sum;
+}
