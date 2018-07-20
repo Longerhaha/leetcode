@@ -1,0 +1,37 @@
+/*
+ * 贪心法
+ * 在跌价的前一天卖出，然后第二天再买入，再在跌价的前一天卖出，如此反复直到结束
+ */
+#define GREEDY 1
+/*
+ * 差分法
+ * 差分是正的则累加到利益里
+ */
+#define DIFF 2
+#define ALGO_SEL 2
+
+#if ALGO_SEL == GREEDY
+    int maxProfit(int* prices, int pricesSize) {
+        int min_idx = prices[0]<=prices[1] ? 0:-1;
+        int search = 1;
+        int max_profit = 0;
+        while(search < pricesSize){
+            if(prices[search] < prices[search-1]){
+                max_profit += (min_idx==-1 ? 0:prices[search-1]-prices[min_idx]);
+                min_idx = search;
+            }
+            search++;
+        }
+        max_profit += (min_idx==-1 ? 0:prices[pricesSize-1]-prices[min_idx]);
+        return max_profit;
+    }
+#elif ALGO_SEL == DIFF
+    int maxProfit(int* prices, int pricesSize) {
+        int max_profit = 0;
+        for (int i = 1; i < pricesSize; i++) {
+            if(prices[i]-prices[i-1] > 0)
+                max_profit += prices[i]-prices[i-1];
+        }
+        return max_profit;
+    }
+#endif
