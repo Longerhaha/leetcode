@@ -1,0 +1,47 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+struct ListNode* insertionSortList(struct ListNode* head) {
+    if(head == NULL)
+        return (struct ListNode*)NULL;
+    
+    /*
+     * 建立头空头结点
+     */
+    struct ListNode* empty_head = (struct ListNode*)malloc(sizeof(struct ListNode));
+    assert(empty_head != NULL);
+    empty_head->val = -1;
+    empty_head->next = head;
+    
+    struct ListNode* pre = head;
+    struct ListNode* cur = pre->next;
+    struct ListNode* next = cur == NULL ? NULL : cur->next;
+    
+    while( cur ){
+        struct ListNode* tmp = empty_head;
+        while(tmp->next->val < cur->val && tmp->next != cur){
+            tmp = tmp->next;
+        }
+        //tmp != cur需要调整，否则不需要调整
+        if(tmp->next != cur){
+            cur->next = tmp->next;
+            tmp->next = cur;
+            pre->next = next;
+            //调整pre、cur、next指针
+            cur = next;
+            next = cur == NULL ? NULL : cur->next;
+        } 
+        else{ //链表不需要调整，但是pre、cur、next指针还是需要调整
+            pre = cur;
+            cur = next;
+            next = cur == NULL ? NULL : cur->next;
+        }
+    }
+    head = empty_head->next;
+    free(empty_head);
+    return head;
+}
