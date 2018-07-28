@@ -1,3 +1,11 @@
+/*
+ * 两个相同的数异或是0
+ * 于是把所有的数异或起来就是那个只出现一个的元素的值
+ */
 int singleNumber(int* nums, int numsSize) {
-    
+    int rslt = 0;
+    for( int* p = nums; p < nums + numsSize; p++ ){
+        rslt ^= *p;
+    }
+    return rslt;
 }
