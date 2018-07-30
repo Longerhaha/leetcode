@@ -1,0 +1,48 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+/*
+ * 注意路径可能是负的
+ * tmp_sum记录以当前root为根节点的最大路径和
+ * p_max_path_sum是指向当前最大的路径和的指针
+ * 当前最大路径和的情况有四种
+ * （1）根节点
+ * （2）根节点与左子树最大路径和构成的路径
+ * （3）根节点与右子树最大路径和构成的路径
+ * （4）左子树最大和路径跨越根节点至右子树最大路径和路径
+ * DFS思路：
+ * 1. 首先判断是否到叶子节点，并判断该节点的值是否大于当前最大路径和，如果是则更新，并返回根节点的值至上层
+ * 2. 如果存在左子树，则获取左子树的最大路径和
+ *    如果存在右子树，则获取右子树的最大路径和
+ * 3. 获取以当前根节点的最大路径和（四种情况）
+ * 4. 如果以当前根节点的最大路径和大于当前最大路径和，则更新当前最大路径和
+ * 5. 返回不跨越根节点的最大路径和（如果你返回的是tmp_sum则错了，因为tmp_sum可能是左子树跨越当前根几点至右子树的路径，对于上层而言，是不能存在这样的路径的）
+ */
+int maxPathSum_dfs(struct TreeNode* root, int* p_max_path_sum){
+    if(root->left == NULL && root->right == NULL){
+        *p_max_path_sum =  MAX(root->val, *p_max_path_sum);
+        return root->val;
+    }
+    int left_max_path_sum = root->left == NULL ? 0 : maxPathSum_dfs(root->left, p_max_path_sum);
+    int right_max_path_sum = root->right == NULL ? 0 : maxPathSum_dfs(root->right, p_max_path_sum);
+    //把四种情况都包括在内
+    int tmp_sum = root->val + (left_max_path_sum > 0 ? left_max_path_sum : 0) + (right_max_path_sum > 0 ? right_max_path_sum : 0);
+    if(tmp_sum > *p_max_path_sum)
+        *p_max_path_sum = tmp_sum;
+    //返回给上层只能返回经过当前跟节点的路径，而不能是跨越当前根节点的路径
+    return MAX(root->val + (left_max_path_sum > 0 ? left_max_path_sum : 0), root->val + (right_max_path_sum > 0 ? right_max_path_sum : 0));
+}
+
+#define INT_MIN -2147483648;
+int maxPathSum(struct TreeNode* root) {
+    int max_path_sum = INT_MIN;
+    maxPathSum_dfs(root, &max_path_sum);
+    //printf("%d\n", MAX(root->val, max_path_sum));
+    return max_path_sum;
+}
