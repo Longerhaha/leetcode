@@ -1,0 +1,24 @@
+#include <type.h>
+#define ABS(a) ((a) > 0 ? (a) : -(a))
+bool isPalindrome(char* s) {
+    if(s == NULL)
+        return true;
+    int len_s = strlen(s);
+    int start = 0, end = len_s - 1;
+    while( start < end ){
+        //找到有效的start和end
+        while( !isalnum(s[start]) && start < end ) start++;
+        while( !isalnum(s[end]) && start < end ) end--;
+        printf("%d %d\n", start, end);
+        //注意此时有可能start等于end而且该位置上是无效字符
+        if(start == end && !isalnum(s[start]))
+            return true;
+        
+        //如果是数字需要判断数字是否相等，如果是字母判断是否其是否相等或者差值的绝对值是否是32
+        if( (isdigit(s[start]) && ABS(s[start] - s[end]) == 0) || (isalpha(s[start]) && (ABS(s[start] - s[end]) == 32 ||  ABS(s[start] - s[end]) == 0)) )
+            start++, end--;
+        else
+            return false;
+    }
+    return true;
+}
