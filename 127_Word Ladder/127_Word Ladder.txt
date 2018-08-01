@@ -1,0 +1,479 @@
+#define MAX_INT 2147483647
+
+/*
+ * 基于邻接矩阵的Dijkstra算法（权重全部为1）
+ * 1.基于规则构造图的邻接矩阵
+ * 2.根据Dijkstra算法算出beginWord 到 每个wordList的最短路径
+ * 3.如果存在endWord，找出endWord 在 wordList的位置，并返回对于位置的最短距离与路径
+ * 该方法被测试样例卡住了，因为wordList很大的时候，内存会超出限制
+ */
+#define ADJ_MAT_DIJKSTRA 1
+
+/*
+ * 基于邻接表的Dijkstra算法（权重全部为1）
+ * 1.基于规则构造图的邻接表
+ * 2.根据Dijkstra算法算出beginWord 到 每个wordList的最短路径
+ * 3.如果存在endWord，找出endWord 在 wordList的位置，并返回对于位置的最短距离与路径
+ * 该方法被测试样例卡住了，因为wordList很大的时候，因为超时而无法通过
+ */
+#define ADJ_TABLE_DIJKSTRA 2
+
+
+#define QUEUE_HASH 3
+
+#define ALGO_SELECT 2
+
+/*
+ * 根据转换规则判断两个字符串是否存在连接关系
+ * 两个字符串都是三个元素
+ */
+int is_connect(const char* str1, const char* str2){
+    int str1_len = strlen(str1);
+    int str2_len = strlen(str2);
+
+    if(str1_len != str2_len)
+        return 0;
+    int cnt_same = 0;
+    for(int i = 0; i < str1_len; i++){
+        if(str1[i] == str2[i]) 
+            cnt_same++;
+    }
+    return cnt_same == str1_len - 1 ? 1 : 0;
+}
+
+/*
+ * 寻找未被收录的最小dist节点
+ */
+int find_min_uncollected(const int* collected, const int* dist, const int len){
+    int min_dist_idx = -1;
+    int min_dist = MAX_INT;
+    for( int i = 0; i < len; i++ ){
+        if(!collected[i] && dist[i] < min_dist){
+             min_dist = dist[i], min_dist_idx = i;  
+        }
+    }
+    return min_dist_idx;
+}
+
+#if ALGO_SELECT == ADJ_MAT_DIJKSTRA
+    /*
+     * 根据转换规则建立邻接矩阵
+     */
+    void build_graph(int** graph, const char* beginWord, char** wordList, const int wordListSize){
+
+        //对角线元素都是0
+        for( int i = 0; i < wordListSize + 1; i++ ){
+            graph[i][i] = 0;
+        }
+
+        //beginWord与wordList
+        for( int i = 1; i < wordListSize + 1; i++ )
+            graph[0][i] = is_connect(beginWord, wordList[i-1]);
+        //wordList与wordList
+        for( int i = 0; i < wordListSize - 1; i++ ){
+            for( int j = i+1; j < wordListSize; j++ ){
+                graph[i+1][j+1] = is_connect(wordList[i], wordList[j]);
+            }
+        }
+        //利用对称性补足另外一半元素
+        for( int j = 0; j < wordListSize ; j++ ){
+            for( int i = 1; i < wordListSize+1; i++ ){
+                graph[i][j] = graph[j][i];
+            }
+        }
+    }
+
+    /*
+     * 邻接矩阵形式的Dijkstra
+     * 求从节点0至其他graph_size-1个节点的最短路径（可以带权重，这里权重全部为1）
+     */
+    void get_ladder_min_path(int** graph, int* dist, int* path, const int graph_size){
+        //访问数组
+        int collected[graph_size];
+        //int dist[graph_size];
+        memset(collected, 0, sizeof(int) * graph_size);
+        //memset(dist, MAX_INT, sizeof(int) * graph_size);
+        
+        //设置beginWord(源顶点)的参数
+        collected[0] = 1;
+        dist[0] = 1;
+        path[0] = 0;
+        
+        //初始化与源顶点相连接的节点的dist
+        for( int i = 1; i < graph_size; i++ ){
+            if(graph[0][i])
+                dist[i] = 2; //如果带权重，修改为权重
+        }
+        
+        /* 
+         * 开始寻找所有路径的最短路径
+         * 注意无法解决带有负边的问题
+         */
+        while(1){
+            //寻找所有未收录顶点的最小dist的下标
+            int uncollected_min_dist_idx = find_min_uncollected(collected, dist, graph_size);
+            //如果这样的V不存在，则可以跳出去了
+            if(uncollected_min_dist_idx == -1)
+                break;
+            //收录
+            collected[uncollected_min_dist_idx] = 1;
+            for( int j = 0; j < graph_size; j++ ){
+                //如果带有权重则修改为权重
+                if(!collected[j] && graph[uncollected_min_dist_idx][j] && dist[uncollected_min_dist_idx] + 1 < dist[j]){
+                    dist[j] = dist[uncollected_min_dist_idx] + 1;
+                    path[j] = uncollected_min_dist_idx;
+                }  
+            }
+            //printf("%d\n", uncollected_min_dist_idx);
+        }
+    }
+
+    int ladderLength(char* beginWord, char* endWord, char** wordList, int wordListSize) {
+
+        int flag_endWord_in_wordList = 0;
+        int end_word_idx = 0;
+        for( int i = 0; i<wordListSize; i++){
+            if(strcmp(endWord, wordList[i]) == 0)
+                flag_endWord_in_wordList = 1, end_word_idx = i + 1;
+        }
+        //如果不存在endWord在wordList里面
+        if(flag_endWord_in_wordList == 0)
+            return 0;
+        //使用邻接矩阵表示图
+        //int graph[wordListSize+1][wordListSize+1];
+        int** graph = (int**)malloc(sizeof(int*) * (wordListSize + 1));
+        assert(graph != NULL);
+        for( int i = 0; i < wordListSize + 1; i++ ){
+            graph[i] = (int*)malloc(sizeof(int) * (wordListSize + 1));
+            assert(graph[i] != NULL);
+        }
+
+        //根据规则建立图的连接关系
+        build_graph(graph, beginWord, wordList, wordListSize);
+        
+        //初始化距离和路径
+        int dist[wordListSize+1];
+        for( int i = 0; i < wordListSize+1; i++ )
+            dist[i] = MAX_INT;
+        int path[wordListSize+1];
+        for( int i = 0; i < wordListSize+1; i++ )
+            path[i] = 0;
+        //使用Dijkstra算法获取其到各个节点的最小路径
+        get_ladder_min_path(graph, dist, path, wordListSize + 1);
+        
+        //释放内存
+        for( int i = 0; i < wordListSize + 1; i++ ){
+            free(graph[i]);
+        }
+        free(graph);
+        
+        return dist[end_word_idx] == MAX_INT ? 0 : dist[end_word_idx];
+    }
+#elif ALGO_SELECT == ADJ_TABLE_DIJKSTRA
+
+    typedef struct adj_table_tag* p_adj_table; 
+    typedef struct adj_table_tag adj_table;
+    struct adj_table_tag{
+        int wordList_idx;
+        p_adj_table next;
+    };
+    
+
+    int insert_table_tail(p_adj_table p_head, const int val){
+        while (p_head->next != NULL )
+            p_head = p_head->next;
+        
+        p_adj_table tmp = (p_adj_table)malloc(sizeof(adj_table));
+        if(tmp == NULL){
+            printf("malloc table_memory error!\n");
+            exit(EXIT_FAILURE);
+        }
+        tmp->wordList_idx = val;
+        tmp->next = NULL;
+        p_head->next = tmp;
+        return 1;
+    }
+
+    void build_table(p_adj_table p_table_head, const char* beginWord, char** wordList, const int wordListSize){
+        
+        //1.构建beginWord的table
+        for( int j = 0; j < wordListSize; j++ ){
+            if(is_connect(beginWord, wordList[j]))
+                insert_table_tail(p_table_head, j + 1);
+        }
+        //2.构建wordList的table
+        for( int i = 0; i < wordListSize; i++ ){
+            if(is_connect(beginWord, wordList[i]))
+                insert_table_tail(p_table_head + 1 + i, 0);
+            for( int j = 0; j < wordListSize; j++ ){
+                if(i != j && is_connect(wordList[i], wordList[j]))
+                    insert_table_tail(p_table_head + 1 + i, j + 1);
+            }
+        }
+    }
+
+    
+
+    /*
+     * 邻接表形式的Dijkstra
+     * 求从节点0至其他graph_size-1个节点的最短路径（可以带权重，这里权重全部为1）
+     */
+    void get_ladder_min_path(p_adj_table p_table_head, int* dist, int* path, const int table_size){
+        //访问数组
+        int collected[table_size];
+        for( int i = 0; i < table_size; i++ )
+            collected[i] = 0;
+        
+        //设置beginWord(源顶点)的参数
+        collected[0] = 1;
+        dist[0] = 1;
+        path[0] = 0;
+        
+        //初始化与源顶点相连接的节点的dist
+        p_adj_table p = p_table_head->next;
+        while(p != NULL){
+            dist[p->wordList_idx] = 2;
+            p = p->next;
+        }
+        /* 
+         * 开始寻找所有路径的最短路径
+         * 注意无法解决带有负边的问题
+         */
+        while(1){
+            //寻找所有未收录顶点的最小dist的下标
+            int uncollected_min_dist_idx = find_min_uncollected(collected, dist, table_size);
+            //如果这样的V不存在，则可以跳出去了
+            if(uncollected_min_dist_idx == -1)
+                break;
+            //收录
+            collected[uncollected_min_dist_idx] = 1;
+            p = (p_table_head + uncollected_min_dist_idx)->next;
+            while(p != NULL){
+                //如果带有权重则修改为权重
+                if(!collected[p->wordList_idx] && dist[uncollected_min_dist_idx] + 1 < dist[p->wordList_idx]){
+                    dist[p->wordList_idx] = dist[uncollected_min_dist_idx] + 1;
+                    path[p->wordList_idx] = uncollected_min_dist_idx;
+                }
+                p = p->next;
+            }
+        }
+    }
+    int ladderLength(char* beginWord, char* endWord, char** wordList, int wordListSize) {
+        int flag_endWord_in_wordList = 0;
+        int end_word_idx = 0;
+        for( int i = 0; i<wordListSize; i++){
+            if(strcmp(endWord, wordList[i]) == 0)
+                flag_endWord_in_wordList = 1, end_word_idx = i + 1;
+        }
+        //如果不存在endWord在wordList里面
+        if(flag_endWord_in_wordList == 0)
+            return 0;
+        
+        p_adj_table p_table_head = (p_adj_table)malloc(sizeof(adj_table) * (wordListSize + 1));
+        assert(p_table_head != NULL);
+        //初始化头空节点
+        for( int i = 0; i < wordListSize + 1; i++){
+            p_table_head[i].wordList_idx = -1;
+            p_table_head[i].next = NULL;
+        }
+        //根据规则建立图的连接关系
+        build_table(p_table_head, beginWord, wordList, wordListSize);
+        /*打印表
+        for( int i = 0; i < wordListSize + 1; i++){
+            p_adj_table p = (p_table_head + i)->next;
+            printf("%d(start)->", i);
+            while( p != NULL ){
+                printf("%d->", p->wordList_idx);
+                p = p -> next;
+            }
+            printf("NULL\n");
+        }*/
+        //初始化距离和路径
+        int dist[wordListSize+1];
+        for( int i = 0; i < wordListSize+1; i++ )
+            dist[i] = MAX_INT;
+        int path[wordListSize+1];
+        for( int i = 0; i < wordListSize+1; i++ )
+            path[i] = 0;
+        //使用Dijkstra算法获取其到各个节点的最小路径
+        get_ladder_min_path(p_table_head, dist, path, wordListSize + 1);
+        return dist[end_word_idx] == MAX_INT ? 0 : dist[end_word_idx];
+    }
+#elif ALGO_SELECT == QUEUE_HASH
+    
+    /*
+     * 这是一个带有链队信息结点的链队列文件
+     */
+    #define MAX_DATA_LEN 1000
+    typedef struct data_tag data_node;
+    struct data_tag{
+        char* str;
+        int depth;
+    }
+    typedef data_node DATA_TYPE
+    typedef struct queue_node_tag* p_queue_node;
+    /*
+     * 链队列结构体
+     */
+    typedef struct queue_node_tag{
+        DATA_TYPE data;
+        p_queue_node next;
+    }queue_node;
+    /*
+     * 链队列的信息指针
+     * 链表的头、尾巴以及长度信息
+     */
+    typedef struct queue_tag* p_queue;
+    typedef struct queue_tag{
+        p_queue_node front;
+        p_queue_node rear;
+        int queue_num;
+    }queue;
+    /*
+     * 链队列的初始化
+     * 初始化失败停止程序，因为可能系统内存满了或者奔溃了
+     */
+    p_queue queue_init(void){
+        p_queue head = (p_queue)malloc(sizeof(queue));
+        assert(head != NULL);
+        head->front = NULL;
+        head->rear  = NULL;
+        head->queue_num = 0;
+        return head;
+    }
+
+    /*
+     * 判断链队列是否为空
+     */
+    int queue_is_empty(const p_queue head){
+        return (0 == head->queue_num);
+    }
+
+    /*
+     * 判断链队列是否满
+     */
+    int queue_is_full(const p_queue head){
+        return (head->queue_num > MAX_DATA_LEN);
+    }
+
+    /*
+     * 往链队列插入一个数据
+     * 插入成功，返回1
+     * 数据内存申请失败，返回0
+     * 队列满返回-1
+     */
+    int queue_in(p_queue head, const DATA_TYPE insert_data){
+
+        if(queue_is_full(head)){
+            printf("queue is full!\n");
+            return -1;
+        }
+        p_queue_node p_node = (p_queue_node)malloc(sizeof(queue_node));
+        if(NULL == p_node){
+            printf("malloc data:%d memory error!\n", insert_data);
+            return 0;
+        }
+        /*
+         * 插入到链队列尾巴
+         */
+        p_node->data = insert_data;
+        p_node->next = NULL;
+        /*
+         *不是第一次插入
+         */
+        if(head->rear != NULL){
+            head->rear->next = p_node;
+            head->rear = p_node;
+        } 
+        /*
+         * 第一次插入
+         * 修正front与rear指针一样
+         */ 
+        else{
+            head->front = p_node;
+            head->rear  = p_node;
+        }
+        head->queue_num += 1;
+        return 1;
+    }
+
+    /*
+     * 往链队列弹出一个数据
+     * 即从头出去
+     * 若链队列为空，则返回空
+     */
+    DATA_TYPE queue_out(p_queue head){
+        if(queue_is_empty(head)){
+            printf("list queue_node is empty!\n");
+            return (DATA_TYPE)NULL;
+        }
+        DATA_TYPE head_data = head->front->data;
+        p_queue_node p_temp;
+        p_temp = head->front;
+        head->front = p_temp->next;
+        /* 
+         * 如果是最后一个数据从队列出去
+         * 修正一下rear指针为NULL
+         */
+        if(head->front == NULL){
+            head->rear = NULL;
+        }
+        free(p_temp);
+        head->queue_num -= 1;
+        return head_data;
+    }
+
+    /*
+     * 返回链队列的头结点数据
+     * 若链队列为空，则返回空
+     */
+    DATA_TYPE queue_top_element(const p_queue head){
+        if(queue_is_empty(head)){
+            printf("list queue is empty!\n");
+            return (DATA_TYPE)NULL;
+        }
+        else
+            return head->front->data;
+    }
+
+    int ladde_dfs(p_queue queue, const char* beginWord, const char* endWord, char** wordList, const int wordListSize){
+        data_node beginword;
+        beginword.str = beginWord;
+        beginword.depth = 1;
+        queue_in(queue, beginword);
+        while( !queue_is_empty(queue) ){
+            data_node tmp = queue_out(queue);
+            //如果找到了endWord
+            if(strcmp(tmp.str, endWord) == 0)
+                return tmp.depth;
+            
+            for( int i = 0; i < wordListSize; i++ ){
+                if( wordList[i]没有出现过 && is_connect(tmp.str, wordList[i])){
+                    data_node adj_node;
+                    adj_node.str = wordList[i];
+                    adj_node.depth = tmp.depth + 1;
+                    queue_in(queue, adj_node);
+                }    
+            }
+        }
+        //没有找到endWord
+        return 0;
+    }
+
+
+    int ladderLength(char* beginWord, char* endWord, char** wordList, int wordListSize) {
+        int flag_endWord_in_wordList = 0;
+        int end_word_idx = 0;
+        for( int i = 0; i<wordListSize; i++){
+            if(strcmp(endWord, wordList[i]) == 0)
+                flag_endWord_in_wordList = 1, end_word_idx = i + 1;
+        }
+        //如果不存在endWord在wordList里面
+        if(flag_endWord_in_wordList == 0)
+            return 0;
+        p_queue q = queue_init();
+        return ladde_dfs(p_queue queue, char* beginWord, char* endWord, char** wordList, int wordListSize);
+    }
+    
+
+#endif
