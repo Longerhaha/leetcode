@@ -18,10 +18,19 @@
  */
 #define ADJ_TABLE_DIJKSTRA 2
 
+/*
+ * 基于队列的BFS
+ * 1. 初始化队列
+ * 2. beginWord进队
+ * 3. while( 队列不空 )
+ *         节点V出队;
+ *         如果节点V的str与endWord一样则返回深度;
+ *         对V所有的邻接点W,其深度加1后进队
+ * 4. 出循环代码没有endWord于是返回0
+ */
+#define QUEUE_BFS 3
 
-#define QUEUE_HASH 3
-
-#define ALGO_SELECT 2
+#define ALGO_SELECT 3
 
 /*
  * 根据转换规则判断两个字符串是否存在连接关系
@@ -61,24 +70,28 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
      */
     void build_graph(int** graph, const char* beginWord, char** wordList, const int wordListSize){
 
-        //对角线元素都是0
+        /*对角线元素都是0
         for( int i = 0; i < wordListSize + 1; i++ ){
             graph[i][i] = 0;
-        }
-
+        }*/
+        
         //beginWord与wordList
         for( int i = 1; i < wordListSize + 1; i++ )
-            graph[0][i] = is_connect(beginWord, wordList[i-1]);
+            *((int*)graph + (wordListSize + 1) * 0 + i) = is_connect(beginWord, wordList[i-1]); 
+        ////注意不能使用graph[0][i]，因为编译器无法为其定位，所以需要认为传入一行的长度
+
         //wordList与wordList
         for( int i = 0; i < wordListSize - 1; i++ ){
             for( int j = i+1; j < wordListSize; j++ ){
-                graph[i+1][j+1] = is_connect(wordList[i], wordList[j]);
+                *((int*)graph + (wordListSize + 1) * (i + 1) + j + 1) = is_connect(wordList[i], wordList[j]);
+                //注意不能使用graph[i+1][j+1]，因为编译器无法为其定位，所以需要认为传入一行的长度
             }
         }
         //利用对称性补足另外一半元素
         for( int j = 0; j < wordListSize ; j++ ){
             for( int i = 1; i < wordListSize+1; i++ ){
-                graph[i][j] = graph[j][i];
+                *((int*)graph + (wordListSize + 1) * i + j) = *((int*)graph + (wordListSize + 1) * j + i);
+                //graph[i][j] = graph[j][i];
             }
         }
     }
@@ -87,11 +100,12 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
      * 邻接矩阵形式的Dijkstra
      * 求从节点0至其他graph_size-1个节点的最短路径（可以带权重，这里权重全部为1）
      */
-    void get_ladder_min_path(int** graph, int* dist, int* path, const int graph_size){
+    void adj_array_dijkstra(int** graph, int* dist, int* path, const int graph_size){
         //访问数组
         int collected[graph_size];
         //int dist[graph_size];
-        memset(collected, 0, sizeof(int) * graph_size);
+        for( int i = 0; i < graph_size; i++ )
+            collected[i] = 0;
         //memset(dist, MAX_INT, sizeof(int) * graph_size);
         
         //设置beginWord(源顶点)的参数
@@ -101,13 +115,17 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
         
         //初始化与源顶点相连接的节点的dist
         for( int i = 1; i < graph_size; i++ ){
-            if(graph[0][i])
+            //if(graph[0][i])
+            if(*((int*)graph + graph_size * 0 + i))
                 dist[i] = 2; //如果带权重，修改为权重
         }
         
         /* 
-         * 开始寻找所有路径的最短路径
-         * 注意无法解决带有负边的问题
+         * Dijkstra算法（注意无法解决带有负边的问题）
+         * while(1)
+         *     寻找所有未收录顶点的最小dist的下标的节点V
+         *     如果这样的V不存在，则可以跳出循环
+         *     对V所有相邻节点W，如果未被收录且dist小于V节点的dist+1，则更新其dist和path
          */
         while(1){
             //寻找所有未收录顶点的最小dist的下标
@@ -119,7 +137,8 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
             collected[uncollected_min_dist_idx] = 1;
             for( int j = 0; j < graph_size; j++ ){
                 //如果带有权重则修改为权重
-                if(!collected[j] && graph[uncollected_min_dist_idx][j] && dist[uncollected_min_dist_idx] + 1 < dist[j]){
+                //if(!collected[j] && graph[uncollected_min_dist_idx][j] && dist[uncollected_min_dist_idx] + 1 < dist[j]){
+                if(!collected[j] && *((int*)graph + graph_size * uncollected_min_dist_idx + j) && dist[uncollected_min_dist_idx] + 1 < dist[j]){
                     dist[j] = dist[uncollected_min_dist_idx] + 1;
                     path[j] = uncollected_min_dist_idx;
                 }  
@@ -132,7 +151,7 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
 
         int flag_endWord_in_wordList = 0;
         int end_word_idx = 0;
-        for( int i = 0; i<wordListSize; i++){
+        for( int i = 0; i < wordListSize; i++){
             if(strcmp(endWord, wordList[i]) == 0)
                 flag_endWord_in_wordList = 1, end_word_idx = i + 1;
         }
@@ -140,17 +159,31 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
         if(flag_endWord_in_wordList == 0)
             return 0;
         //使用邻接矩阵表示图
-        //int graph[wordListSize+1][wordListSize+1];
+        int graph[wordListSize+1][wordListSize+1];
+        for( int i = 0; i < wordListSize + 1; i++ ){
+            for( int j = 0; j < wordListSize + 1; j++ ){
+                graph[i][j] = 0;
+            }
+        }
+        
+        
+        /*
         int** graph = (int**)malloc(sizeof(int*) * (wordListSize + 1));
         assert(graph != NULL);
         for( int i = 0; i < wordListSize + 1; i++ ){
             graph[i] = (int*)malloc(sizeof(int) * (wordListSize + 1));
             assert(graph[i] != NULL);
-        }
+        }*/
 
         //根据规则建立图的连接关系
         build_graph(graph, beginWord, wordList, wordListSize);
-        
+        /*
+        for( int i = 0; i < wordListSize + 1; i++ ){
+            for( int j = 0; j < wordListSize + 1; j++ ){
+                printf("%d ", *((int*)graph + (wordListSize + 1) * i + j));
+            }
+            printf("\n");
+        }*/
         //初始化距离和路径
         int dist[wordListSize+1];
         for( int i = 0; i < wordListSize+1; i++ )
@@ -159,13 +192,13 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
         for( int i = 0; i < wordListSize+1; i++ )
             path[i] = 0;
         //使用Dijkstra算法获取其到各个节点的最小路径
-        get_ladder_min_path(graph, dist, path, wordListSize + 1);
+        adj_array_dijkstra(graph, dist, path, wordListSize + 1);
         
-        //释放内存
+        /*//释放内存
         for( int i = 0; i < wordListSize + 1; i++ ){
             free(graph[i]);
         }
-        free(graph);
+        free(graph);*/
         
         return dist[end_word_idx] == MAX_INT ? 0 : dist[end_word_idx];
     }
@@ -215,10 +248,13 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
     
 
     /*
-     * 邻接表形式的Dijkstra
-     * 求从节点0至其他graph_size-1个节点的最短路径（可以带权重，这里权重全部为1）
+     * 邻接表形式的Dijkstra算法（注意无法解决带有负边的问题）
+     * while(1)
+     *     寻找所有未收录顶点的最小dist的下标的节点V
+     *     如果这样的V不存在，则可以跳出循环
+     *     对V所有相邻节点W，如果未被收录且dist小于V节点的dist+1，则更新其dist和path
      */
-    void get_ladder_min_path(p_adj_table p_table_head, int* dist, int* path, const int table_size){
+    void adj_table_dijkstra(p_adj_table p_table_head, int* dist, int* path, const int table_size){
         //访问数组
         int collected[table_size];
         for( int i = 0; i < table_size; i++ )
@@ -258,6 +294,8 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
             }
         }
     }
+
+
     int ladderLength(char* beginWord, char* endWord, char** wordList, int wordListSize) {
         int flag_endWord_in_wordList = 0;
         int end_word_idx = 0;
@@ -296,21 +334,23 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
         for( int i = 0; i < wordListSize+1; i++ )
             path[i] = 0;
         //使用Dijkstra算法获取其到各个节点的最小路径
-        get_ladder_min_path(p_table_head, dist, path, wordListSize + 1);
+        adj_table_dijkstra(p_table_head, dist, path, wordListSize + 1);
         return dist[end_word_idx] == MAX_INT ? 0 : dist[end_word_idx];
     }
-#elif ALGO_SELECT == QUEUE_HASH
+#elif ALGO_SELECT == QUEUE_BFS
     
     /*
      * 这是一个带有链队信息结点的链队列文件
      */
-    #define MAX_DATA_LEN 1000
-    typedef struct data_tag data_node;
-    struct data_tag{
+    #define MAX_DATA_LEN 5000
+    //typedef struct data_tag  data_node;
+    typedef struct data_tag* p_data_node;
+    typedef struct data_tag{
         char* str;
+        int wordList_idx;
         int depth;
-    }
-    typedef data_node DATA_TYPE
+    }data_node;
+    #define DATA_TYPE data_node
     typedef struct queue_node_tag* p_queue_node;
     /*
      * 链队列结构体
@@ -400,12 +440,16 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
     /*
      * 往链队列弹出一个数据
      * 即从头出去
-     * 若链队列为空，则返回空
+     * 若链队列为空，则返回空节点
      */
     DATA_TYPE queue_out(p_queue head){
         if(queue_is_empty(head)){
             printf("list queue_node is empty!\n");
-            return (DATA_TYPE)NULL;
+            DATA_TYPE node;
+            node.str = NULL;
+            node.wordList_idx = -1;
+            node.depth = -1;
+            return node;
         }
         DATA_TYPE head_data = head->front->data;
         p_queue_node p_temp;
@@ -430,49 +474,84 @@ int find_min_uncollected(const int* collected, const int* dist, const int len){
     DATA_TYPE queue_top_element(const p_queue head){
         if(queue_is_empty(head)){
             printf("list queue is empty!\n");
-            return (DATA_TYPE)NULL;
+            DATA_TYPE node;
+            node.str = NULL;
+            node.wordList_idx = -1;
+            node.depth = -1;
+            return node;
         }
         else
             return head->front->data;
     }
-
-    int ladde_dfs(p_queue queue, const char* beginWord, const char* endWord, char** wordList, const int wordListSize){
-        data_node beginword;
-        beginword.str = beginWord;
-        beginword.depth = 1;
-        queue_in(queue, beginword);
+    
+    /*
+     * 基于队列实现BFS
+     */
+    int ladde_dfs(const p_queue queue, const char* beginWord, const char* endWord, int* path, char** wordList, const int wordListSize, int* visited){
+        /*
+         * beginword的wordList_idx记为0，深度记为1即从1开始
+         */
+        data_node beginword_node;
+        beginword_node.str = beginWord;
+        beginword_node.wordList_idx = 0;
+        beginword_node.depth = 1;
+        path[0] = 0;
+        queue_in(queue, beginword_node);
+        visited[0] = 1;//代表beginWord已遍历过
         while( !queue_is_empty(queue) ){
-            data_node tmp = queue_out(queue);
+            DATA_TYPE tmp = queue_out(queue);
+            //data_node tmp_node;
+            //memcpy(&tmp_node, tmp, sizeof(data_node));
+            //printf("str = %s, depth = %d\n", tmp.str, tmp.depth);
             //如果找到了endWord
-            if(strcmp(tmp.str, endWord) == 0)
+            if(strcmp(tmp.str, endWord) == 0){
                 return tmp.depth;
-            
+            }
+                
+            //寻找未访问的邻接点并更新深度
             for( int i = 0; i < wordListSize; i++ ){
-                if( wordList[i]没有出现过 && is_connect(tmp.str, wordList[i])){
+                if( !visited[i + 1] && is_connect(tmp.str, wordList[i])){
+                    visited[i + 1] = 1;
+                    //printf("adjacent: i = %d, cmpr_str = %s, cur_str = %s, depth = %d\n", i + 1, tmp.str, wordList[i], tmp.depth + 1);
                     data_node adj_node;
                     adj_node.str = wordList[i];
+                    adj_node.wordList_idx = i + 1;
                     adj_node.depth = tmp.depth + 1;
                     queue_in(queue, adj_node);
                 }    
             }
+            /*
+            for( int i = 0; i < wordListSize + 1; i++ ){
+                printf("i = %d, visit[i] = %d\n", i, visited[i]);
+            }*/
         }
         //没有找到endWord
         return 0;
     }
 
-
     int ladderLength(char* beginWord, char* endWord, char** wordList, int wordListSize) {
         int flag_endWord_in_wordList = 0;
         int end_word_idx = 0;
-        for( int i = 0; i<wordListSize; i++){
+        
+        for( int i = 0; i < wordListSize; i++ ){
             if(strcmp(endWord, wordList[i]) == 0)
                 flag_endWord_in_wordList = 1, end_word_idx = i + 1;
         }
         //如果不存在endWord在wordList里面
         if(flag_endWord_in_wordList == 0)
             return 0;
+        //用来标记是否遍历过
+        int visited[wordListSize+1];
+        for( int i = 0; i < wordListSize + 1; i++ )
+            visited[i] = 0;
+        //记录beginWord到endWord的路径
+        int path[wordListSize+1];
+        for( int i = 0; i < wordListSize+1; i++ )
+            path[i] = 0;
+        //初始化队列
         p_queue q = queue_init();
-        return ladde_dfs(p_queue queue, char* beginWord, char* endWord, char** wordList, int wordListSize);
+        //DFS求最小距离
+        return ladde_dfs(q, beginWord, endWord, path, wordList, wordListSize, visited);
     }
     
 
