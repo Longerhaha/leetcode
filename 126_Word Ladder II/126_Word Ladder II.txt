@@ -1,0 +1,339 @@
+/*
+ * 保存BFS时，beginWord和wordList单词的上层连接节点
+ */
+typedef struct pre_connect_tag* p_pre_connect_node;
+
+typedef struct pre_connect_tag{
+    int pre_wordList_idx;
+    p_pre_connect_node next;
+}pre_connect_node;
+/*
+ * 这是一个带有链队信息结点的链队列文件
+ */
+#define MAX_DATA_LEN 10000
+//typedef struct data_tag  data_node;
+typedef struct data_tag* p_data_node;
+typedef struct data_tag{
+    char* str;
+    int wordList_idx;//该词在列表的下标
+    //int depth;
+}data_node;
+#define DATA_TYPE data_node
+typedef struct queue_node_tag* p_queue_node;
+/*
+ * 链队列结构体
+ */
+typedef struct queue_node_tag{
+    DATA_TYPE data;
+    p_queue_node next;
+}queue_node;
+/*
+ * 链队列的信息指针
+ * 链表的头、尾巴以及长度信息
+ */
+typedef struct queue_tag* p_queue;
+typedef struct queue_tag{
+    p_queue_node front;
+    p_queue_node rear;
+    int queue_num;
+}queue;
+/*
+ * 链队列的初始化
+ * 初始化失败停止程序，因为可能系统内存满了或者奔溃了
+ */
+p_queue queue_init(void){
+    p_queue head = (p_queue)malloc(sizeof(queue));
+    assert(head != NULL);
+    head->front = NULL;
+    head->rear  = NULL;
+    head->queue_num = 0;
+    return head;
+}
+
+/*
+ * 判断链队列是否为空
+ */
+int queue_is_empty(const p_queue head){
+    return (0 == head->queue_num);
+}
+
+/*
+ * 判断链队列是否满
+ */
+int queue_is_full(const p_queue head){
+    return (head->queue_num > MAX_DATA_LEN);
+}
+
+/*
+ * 往链队列插入一个数据
+ * 插入成功，返回1
+ * 数据内存申请失败，返回0
+ * 队列满返回-1
+ */
+int queue_in(p_queue head, const DATA_TYPE insert_data){
+
+    if(queue_is_full(head)){
+        printf("queue is full!\n");
+        return -1;
+    }
+    p_queue_node p_node = (p_queue_node)malloc(sizeof(queue_node));
+    if(NULL == p_node){
+        printf("malloc data:%d memory error!\n", insert_data);
+        return 0;
+    }
+    /*
+     * 插入到链队列尾巴
+     */
+    p_node->data = insert_data;
+    p_node->next = NULL;
+    /*
+     *不是第一次插入
+     */
+    if(head->rear != NULL){
+        head->rear->next = p_node;
+        head->rear = p_node;
+    } 
+    /*
+     * 第一次插入
+     * 修正front与rear指针一样
+     */ 
+    else{
+        head->front = p_node;
+        head->rear  = p_node;
+    }
+    head->queue_num += 1;
+    return 1;
+}
+
+/*
+ * 往链队列弹出一个数据
+ * 即从头出去
+ * 若链队列为空，则返回空节点
+ */
+DATA_TYPE queue_out(p_queue head){
+    if(queue_is_empty(head)){
+        printf("list queue_node is empty!\n");
+        DATA_TYPE node;
+        node.str = NULL;
+        node.wordList_idx = -1;
+        //node.depth = -1;
+        return node;
+    }
+    DATA_TYPE head_data = head->front->data;
+    p_queue_node p_temp;
+    p_temp = head->front;
+    head->front = p_temp->next;
+    /* 
+     * 如果是最后一个数据从队列出去
+     * 修正一下rear指针为NULL
+     */
+    if(head->front == NULL){
+        head->rear = NULL;
+    }
+    free(p_temp);
+    head->queue_num -= 1;
+    return head_data;
+}
+
+/*
+ * 返回链队列的头结点数据
+ * 若链队列为空，则返回空
+ */
+DATA_TYPE queue_top_element(const p_queue head){
+    if(queue_is_empty(head)){
+        printf("list queue is empty!\n");
+        DATA_TYPE node;
+        node.str = NULL;
+        node.wordList_idx = -1;
+        //node.depth = -1;
+        return node;
+    }
+    else
+        return head->front->data;
+}
+
+
+
+/*
+ * 根据转换规则判断两个字符串是否存在连接关系
+ * 两个字符串都是三个元素
+ */
+int is_connect(const char* str1, const char* str2){
+    int str1_len = strlen(str1);
+    int str2_len = strlen(str2);
+
+    if(str1_len != str2_len)
+        return 0;
+    int cnt_same = 0;
+    for(int i = 0; i < str1_len; i++){
+        if(str1[i] == str2[i]) 
+            cnt_same++;
+    }
+    return cnt_same == str1_len - 1 ? 1 : 0;
+}
+int insert_pre_wordList_tail(p_pre_connect_node p_head, const int val){
+    while (p_head->next != NULL )
+        p_head = p_head->next;
+
+    p_pre_connect_node tmp = (p_pre_connect_node)malloc(sizeof(pre_connect_node));
+    if(tmp == NULL){
+        printf("malloc pre_connect_node_memory error!\n");
+        return 0;
+    }
+    tmp->pre_wordList_idx = val;
+    tmp->next = NULL;
+    p_head->next = tmp;
+    return 1;
+}
+/*
+ * 基于队列实现BFS
+ * 返回endWord的下标，如果没有endWord返回-1
+ * pre_connect记录BFS时wordList的上层连接节点，由于beginWord是第一层节点，其没有上层连接节点
+ */
+int findLadders_bfs(p_queue queue, const char* beginWord, const char* endWord, char** wordList, const int wordListSize, int* visited, int* depth, p_pre_connect_node pre_connect){
+    /*
+     * beginword的wordList_idx记为0，path_pre_wordList记为自己，深度记为1即从1开始
+     */
+    data_node beginword_node;
+    beginword_node.str = beginWord;
+    beginword_node.wordList_idx = 0;
+    //beginword_node.depth = 1;
+    depth[0] = 1;
+    visited[0] = 1;//代表beginWord已遍历过
+    queue_in(queue, beginword_node);
+    
+    while( !queue_is_empty(queue) ){
+        DATA_TYPE tmp = queue_out(queue);
+        /*
+         * 如果endWord出队列返回endWord的下标，此时最短路径的pre_connect已经记录下来
+         */
+        if(strcmp(tmp.str, endWord) == 0){
+            return tmp.wordList_idx;
+        }
+        
+        //寻找未访问的邻接点并更新深度
+        for( int i = 0; i < wordListSize; i++ ){
+            //如果没有被访问过才加入到队列中
+            if(is_connect(tmp.str, wordList[i])){
+                //初次遍历过或者遍历过但是属于不同层则记录其上一层的连接点
+                
+                if(depth[i + 1] == 0 || depth[tmp.wordList_idx] == depth[i + 1] - 1){
+                    insert_pre_wordList_tail(pre_connect+i, tmp.wordList_idx);
+                }
+                    
+                if(!visited[i + 1]){
+                    visited[i + 1] = 1;
+                    data_node adj_node;
+                    adj_node.str = wordList[i];
+                    adj_node.wordList_idx = i + 1;
+                    //adj_node.depth = tmp.depth + 1;
+                    depth[i + 1] = depth[tmp.wordList_idx] + 1;
+                    queue_in(queue, adj_node);
+                }   
+            }  
+        }
+    }
+    //没有找到endWord
+    return -1;
+}
+/*
+ * 利用DFS求最短转换序列
+ */
+void dfs_path(char*** min_path, const char* beginWord, const char* endWord, char** wordList, const int wordListSize, int pre_wordlist_idx, int depth, const p_pre_connect_node pre_connect, const int min_path_depth, int** columnSizes, int* ladders_num){
+    if(depth == 1){
+        strcpy(min_path[*ladders_num][0], beginWord);
+        (*columnSizes)[*ladders_num] = min_path_depth;
+        *ladders_num += 1;
+        min_path[*ladders_num] = (char**)malloc(sizeof(char*)*min_path_depth);
+        assert(min_path[*ladders_num] != NULL);
+        
+        for( int i = 0; i < min_path_depth; i++ ){
+            min_path[*ladders_num][i] = (char*)malloc(sizeof(char)*strlen(beginWord));
+            assert(min_path[*ladders_num][i] != NULL);
+            strcpy(min_path[*ladders_num][i],  min_path[*ladders_num - 1][i]);
+        }
+        
+        return ;
+    }
+    
+    strcpy(min_path[*ladders_num][depth-1], wordList[pre_wordlist_idx - 1]);
+
+    p_pre_connect_node p = (pre_connect + pre_wordlist_idx - 1)->next;
+    while(p != NULL){
+        pre_wordlist_idx = p->pre_wordList_idx;
+        dfs_path(min_path, beginWord, endWord, wordList, wordListSize, pre_wordlist_idx, depth - 1, pre_connect, min_path_depth, columnSizes, ladders_num);
+        p = p->next;
+    }
+    
+}
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+#define MIN_PATH_NUM 2000
+char*** findLadders(char* beginWord, char* endWord, char** wordList, int wordListSize, int** columnSizes, int* returnSize) {
+
+    int ladders_num = 0;
+    char*** min_path = (char***)malloc(sizeof(char**)*MIN_PATH_NUM);
+    assert(min_path != NULL);
+    
+    *columnSizes = (int*)malloc(sizeof(int)*MIN_PATH_NUM);
+    assert(*columnSizes != NULL);
+    
+    //用来标记是否遍历过
+    int visited[wordListSize+1];
+    for( int i = 0; i < wordListSize + 1; i++ )
+        visited[i] = 0;
+    int depth[wordListSize+1];
+    for( int i = 0; i < wordListSize + 1; i++ )
+        depth[i] = 0;
+    //pre_connect[i]是保存BFS时wordList[i]的上一层连接节点的链表
+    p_pre_connect_node pre_connect = (p_pre_connect_node)malloc(sizeof(pre_connect_node) * wordListSize);
+    //初始化这些头结点
+    for( int i = 0; i < wordListSize; i++ ){
+        (pre_connect + i)->pre_wordList_idx = -1; 
+        (pre_connect + i)->next = NULL;
+    }
+        
+    //初始化队列
+    p_queue q = queue_init();
+    
+    int endWord_idx = findLadders_bfs(q, beginWord, endWord, wordList, wordListSize, visited, depth, pre_connect);
+    if(endWord_idx == -1){
+        *returnSize = 0;
+        return NULL;
+    }
+        
+    /*
+     * 打印当前pre_connect的情况
+     
+    for( int i = 0; i < wordListSize; i++ ){
+        p_pre_connect_node p = (pre_connect + i)->next;
+        printf("%s<-", wordList[i]);
+        while(p != NULL){
+            if(p->pre_wordList_idx == 0)
+                printf("%s<-", beginWord);
+            else
+                printf("%s<-", wordList[p->pre_wordList_idx-1]);
+            p = p->next;
+        }
+        printf("\n");
+    }
+    */
+    //printf("%d %d\n", endWord_idx, depth[endWord_idx]);
+    min_path[0] = (char**)malloc(sizeof(char*) * depth[endWord_idx]);
+    assert(min_path[0] != NULL);
+
+    for( int i = 0; i < depth[endWord_idx]; i++ ){
+        min_path[0][i] = (char*)malloc(sizeof(char) * strlen(beginWord));
+        assert(min_path[0][i] != NULL);
+    }
+    
+    
+    
+    dfs_path(min_path, beginWord, endWord, wordList, wordListSize, endWord_idx, depth[endWord_idx], pre_connect, depth[endWord_idx], columnSizes, &ladders_num);
+    *returnSize = ladders_num;
+    //printf("returnSize : %d\n", ladders_num);
+    return min_path;
+}
