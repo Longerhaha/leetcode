@@ -18,7 +18,7 @@ typedef struct data_tag{
     int wordList_idx;//该词在列表的下标
     //int depth;
 }data_node;
-#define DATA_TYPE data_node
+#define DATA_TYPE p_data_node
 typedef struct queue_node_tag* p_queue_node;
 /*
  * 链队列结构体
@@ -92,6 +92,7 @@ int queue_in(p_queue head, const DATA_TYPE insert_data){
     if(head->rear != NULL){
         head->rear->next = p_node;
         head->rear = p_node;
+        printf("front:%s rear:%s \n", head->front->data->str, head->rear->data->str);
     } 
     /*
      * 第一次插入
@@ -101,6 +102,7 @@ int queue_in(p_queue head, const DATA_TYPE insert_data){
         head->front = p_node;
         head->rear  = p_node;
     }
+    
     head->queue_num += 1;
     return 1;
 }
@@ -113,11 +115,11 @@ int queue_in(p_queue head, const DATA_TYPE insert_data){
 DATA_TYPE queue_out(p_queue head){
     if(queue_is_empty(head)){
         printf("list queue_node is empty!\n");
-        DATA_TYPE node;
-        node.str = NULL;
-        node.wordList_idx = -1;
+        //DATA_TYPE node;
+        //node.str = NULL;
+        //node.wordList_idx = -1;
         //node.depth = -1;
-        return node;
+        return NULL;
     }
     DATA_TYPE head_data = head->front->data;
     p_queue_node p_temp;
@@ -142,11 +144,11 @@ DATA_TYPE queue_out(p_queue head){
 DATA_TYPE queue_top_element(const p_queue head){
     if(queue_is_empty(head)){
         printf("list queue is empty!\n");
-        DATA_TYPE node;
-        node.str = NULL;
-        node.wordList_idx = -1;
+        //DATA_TYPE node;
+        //node.str = NULL;
+        //node.wordList_idx = -1;
         //node.depth = -1;
-        return node;
+        return NULL;
     }
     else
         return head->front->data;
@@ -200,25 +202,26 @@ int findLadders_bfs(p_queue queue, const char* beginWord, const char* endWord, c
     //beginword_node.depth = 1;
     depth[0] = 1;
     visited[0] = 1;//代表beginWord已遍历过
-    queue_in(queue, beginword_node);
+    queue_in(queue, &beginword_node);
     
     while( !queue_is_empty(queue) ){
         DATA_TYPE tmp = queue_out(queue);
+        printf("queue out : %s\n", tmp->str);
         /*
          * 如果endWord出队列返回endWord的下标，此时最短路径的pre_connect已经记录下来
          */
-        if(strcmp(tmp.str, endWord) == 0){
-            return tmp.wordList_idx;
+        if(strcmp(tmp->str, endWord) == 0){
+            return tmp->wordList_idx;
         }
         
         //寻找未访问的邻接点并更新深度
         for( int i = 0; i < wordListSize; i++ ){
             //如果没有被访问过才加入到队列中
-            if(is_connect(tmp.str, wordList[i])){
+            if(is_connect(tmp->str, wordList[i])){
                 //初次遍历过或者遍历过但是属于不同层则记录其上一层的连接点
                 
-                if(depth[i + 1] == 0 || depth[tmp.wordList_idx] == depth[i + 1] - 1){
-                    insert_pre_wordList_tail(pre_connect+i, tmp.wordList_idx);
+                if(depth[i + 1] == 0 || depth[tmp->wordList_idx] == depth[i + 1] - 1){
+                    insert_pre_wordList_tail(pre_connect+i, tmp->wordList_idx);
                 }
                     
                 if(!visited[i + 1]){
@@ -227,14 +230,17 @@ int findLadders_bfs(p_queue queue, const char* beginWord, const char* endWord, c
                     adj_node.str = wordList[i];
                     adj_node.wordList_idx = i + 1;
                     //adj_node.depth = tmp.depth + 1;
-                    depth[i + 1] = depth[tmp.wordList_idx] + 1;
-                    queue_in(queue, adj_node);
+                    depth[i + 1] = depth[tmp->wordList_idx] + 1;
+                    //
+                    queue_in(queue, &adj_node);
+                    printf("queue in is %s,top : %s\n", adj_node.str, queue_top_element(queue)->str);
                 }   
             }  
         }
     }
     //没有找到endWord
     return -1;
+    
 }
 /*
  * 利用DFS求最短转换序列
@@ -271,7 +277,7 @@ void dfs_path(char*** min_path, const char* beginWord, const char* endWord, char
  * The sizes of the arrays are returned as *columnSizes array.
  * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
  */
-#define MIN_PATH_NUM 2000
+#define MIN_PATH_NUM 100
 char*** findLadders(char* beginWord, char* endWord, char** wordList, int wordListSize, int** columnSizes, int* returnSize) {
 
     int ladders_num = 0;
@@ -298,6 +304,19 @@ char*** findLadders(char* beginWord, char* endWord, char** wordList, int wordLis
         
     //初始化队列
     p_queue q = queue_init();
+    data_node beginword_node1;
+    beginword_node1.str = beginWord;
+    beginword_node1.wordList_idx = 0;
+    queue_in(q, &beginword_node1);
+    data_node beginword_node2;
+    beginword_node2.str = wordList[0];
+    beginword_node2.wordList_idx = 0;
+    queue_in(q, &beginword_node2);
+    data_node beginword_node3;
+    beginword_node3.str = wordList[1];
+    beginword_node3.wordList_idx = 0;
+    queue_in(q, &beginword_node3);
+    
     
     int endWord_idx = findLadders_bfs(q, beginWord, endWord, wordList, wordListSize, visited, depth, pre_connect);
     if(endWord_idx == -1){
@@ -321,7 +340,7 @@ char*** findLadders(char* beginWord, char* endWord, char** wordList, int wordLis
         printf("\n");
     }
     */
-    //printf("%d %d\n", endWord_idx, depth[endWord_idx]);
+    printf("%d %d\n", endWord_idx, depth[endWord_idx]);
     min_path[0] = (char**)malloc(sizeof(char*) * depth[endWord_idx]);
     assert(min_path[0] != NULL);
 
