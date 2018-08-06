@@ -1,0 +1,225 @@
+#include<stdio.h>
+#include<stdlib.h>
+typedef int TYPE_HASHFUNC_IN; //hash输入类型
+typedef int TYPE_HASH_KEY; //hash key类型
+typedef int TYPE_HASH_KEYVAL; //hash keyval类型
+#define KEY_INIT (-111111)
+#define KEYVAL_INIT (-111111)
+#define HASH_ERROR (-1)
+
+#define HASH_MOD_PRIME (40001)  //散列函数（模运算）中的模
+#define HASH_SIZE (50001) //哈希表允许最大的容量
+//哈希函数
+int hash_func(TYPE_HASHFUNC_IN i){
+	int key = i % HASH_MOD_PRIME;
+    return (key < 0 ?  (key + HASH_MOD_PRIME) : key);
+}
+
+enum dNode_flag{
+	LEGITIMATE = 0,//合法的
+	EMPTY,//空的
+	DELETED//该节点从字典中被删掉
+};
+
+//哈希表的数据节点
+typedef struct HNode_tag* pHNode;
+typedef struct HNode_tag{
+	TYPE_HASH_KEY key;
+	TYPE_HASH_KEYVAL key_val;
+	int flag;//是否加载过数据的标志，删除时该标志保留且数据置为INIT_DATA，
+	         //数据插入时若数据不是MIN_DATA则插入
+}HNode;
+//哈希表管理节点
+typedef struct MHNode_tag* pMHNode;
+typedef struct MHNode_tag{
+	int size_table;
+	pHNode data;
+}MHNode;
+
+/************************************************
+函数名：	NextPrime（暂时没有用到） 
+函数功能：  下一个素数 
+函数输入：  int 	N   要插入哈希表的节点 
+函数输出：  N后的第一个素数 
+************************************************
+int NextPrime( int N )
+{ // 返回大于N且不超过MAXTABLESIZE的最小素数 
+    int i, p = (N%2)? N+2 : N+1; //从大于N的下一个奇数开始 
+ 
+    while( p <= MAXTABLESIZE ) {
+        for( i=(int)sqrt(p); i>2; i-- )
+            if ( !(p%i) ) break; // p不是素数 
+        if ( i==2 ) break; // for正常结束，说明p是素数 
+        else  p += 2; // 否则试探下一个奇数 
+    }
+    return p;
+}*/
+
+/************************************************
+函数名：	hashTable_init
+函数功能：  初始化哈希表
+函数输入：  int 	tableSize   哈希表的长度
+函数输出：  pHashTable 初始化后的哈希表管理节点指针
+*************************************************/
+pMHNode hashTable_init(int tableSize){
+	pMHNode h  = (pMHNode)malloc(sizeof(MHNode));
+	if(NULL == h){
+		printf("malloc pMHNode memory error!\n");
+        exit(EXIT_FAILURE);
+	}
+	h->size_table = tableSize;//记录哈希表数据节点数目
+	h->data = (pHNode)malloc(tableSize * sizeof(HNode));
+	if(NULL == h->data){
+		printf("malloc pMHNode->data memory error!\n");
+        exit(EXIT_FAILURE);
+	}
+	int i;
+	//初始化哈希表数据节点
+	for( i = 0; i < tableSize; i++ ){
+		h->data[i].key = KEY_INIT;
+		h->data[i].key_val = KEYVAL_INIT;//key_val初始化为-1
+		h->data[i].flag = EMPTY;//初始化为空
+	}
+	return h;
+}
+
+/************************************************
+函数名：	hashTable_insert
+函数功能：  往哈希表插入一个数据
+函数输入：  pHashTable 			h       哈希表管理节点指针
+			TYPE_HASH_KEY 		key     插入节点的键
+			TYPE_HASH_KEYVAL    key_val 插入节点的键值
+函数输出：  1 插入成功
+			HASH_ERROR 插入失败
+*************************************************/
+int hashTable_insert(pMHNode h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL key_val){
+	int idx = hash_func(key);
+	int conflict_num = 0;
+	if(LEGITIMATE != (h->data[idx].flag)){//该位置没有被占（包括删除与空状态）
+		h->data[idx].key = key; //写入数据
+		h->data[idx].key_val = key_val;
+		h->data[idx].flag = LEGITIMATE;
+		return 1;//写入成功
+	}
+	else if(h->data[idx].key == key){
+		printf("key:%d已经在哈希表里面\n",key); 
+		return HASH_ERROR;
+	}	
+	
+	//已经被占有了，即有冲突
+	while(conflict_num < h->size_table){
+		idx = (++idx) % HASH_SIZE;//idx+1
+		if(LEGITIMATE != (h->data[idx].flag)){//线性探测，该位置没有被占
+			h->data[idx].key = key; //写入数据
+			h->data[idx].key_val = key_val;
+			h->data[idx].flag = LEGITIMATE;
+			return 1;//写入成功
+		}
+		conflict_num++;
+	}
+	return HASH_ERROR;//插入失败
+}
+
+
+/************************************************
+函数名：	hashTable_search
+函数功能：  根据key查找哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+			TYPE_HASH_KEY 	key     插入节点的键
+函数输出：  查找成功则返回对应的key_val
+			HASH_ERROR 查找失败
+*************************************************/
+int hashTable_search(pMHNode h, TYPE_HASH_KEY key){
+	int idx = hash_func(key);
+	while((h->data[idx].key != key) && (h->data[idx].flag != EMPTY)){
+		idx = (++idx) % HASH_SIZE;
+	}
+	if(h->data[idx].key == key) //找到了
+		return h->data[idx].key_val;
+	else //遇见空的地方，也就是没找到
+		return HASH_ERROR;	
+}
+
+/************************************************
+函数名：	hashTable_delete
+函数功能：  根据key查找哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+			TYPE_HASH_KEY 	key     删除节点的键
+函数输出：  1 删除成功
+			HASH_ERROR 删除失败，说明没有该键
+*************************************************/
+int hashTable_delete(pMHNode h, TYPE_HASH_KEY key){
+	int idx = hash_func(key);
+	while((h->data[idx].key != key) && (h->data[idx].flag != EMPTY)){
+		idx = (++idx) % HASH_SIZE;
+	}
+	if(h->data[idx].key == key){//找到了该键的位置
+		//初始化
+		h->data[idx].key = KEY_INIT;
+		h->data[idx].key_val = KEYVAL_INIT;
+		h->data[idx].flag = DELETED;//键标志修改为删除
+		return 1;
+	} 	
+	else //遇见空的地方，也就是没找到
+		return HASH_ERROR;
+}
+/************************************************
+函数名：	hashTable_traverse
+函数功能：  遍历哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输出：  无
+*************************************************/
+void hashTable_traverse(pMHNode h){
+	if((NULL == h) || (0 == (h->size_table))){
+		printf("哈希表为空\n");
+		return ;
+	}
+	printf("哈希表状态如下\n");	
+	printf("idx   key  key_val   flag\n");	
+	int i;
+	for(i=0; i<(h->size_table); i++){
+		printf("%d,    %d,   %d,  %d\n", i, h->data[i].key, h->data[i].key_val, h->data[i].flag);
+	}
+	return ;	
+}
+/************************************************
+函数名：	hashTable_destroy
+函数功能：  删除哈希表
+函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输出：  1 删除成功
+			HASH_ERROR 删除失败
+*************************************************/
+int hashTable_destroy(pMHNode h){
+	//释放哈希表数据节点
+	pHNode temp = h->data;
+	free(temp);
+	//释放哈希表管理节点
+	free(h);
+	return 1;
+}
+
+#define MAX(a, b) ((a) >= (b) ? (a):(b))
+int longestConsecutive(int* nums, int numsSize) {
+    int len_lc = 0;
+    pMHNode hash_head = hashTable_init(HASH_SIZE);
+    for( int i = 0; i < numsSize; i++ ){
+        if(hashTable_search(hash_head, nums[i]) != HASH_ERROR)
+            continue;
+        //key_val暂时没有用
+        hashTable_insert(hash_head, nums[i], 0);
+        int left = 0, right = 0;
+        int search = nums[i];
+        while(hashTable_search(hash_head, --search) != HASH_ERROR) 
+            left++;
+        search = nums[i];
+        while(hashTable_search(hash_head, ++search) != HASH_ERROR) 
+            right++;
+        len_lc = MAX(len_lc, left + right + 1);
+        //printf("nums[i]:%d: lc:%d left:%d right:%d\n", nums[i], len_lc, left, right);
+    }
+    hashTable_destroy(hash_head);
+    return len_lc;
+}
+
+
+
