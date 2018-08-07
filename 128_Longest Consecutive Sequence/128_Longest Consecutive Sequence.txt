@@ -4,11 +4,11 @@ typedef int TYPE_HASHFUNC_IN; //hash输入类型
 typedef int TYPE_HASH_KEY; //hash key类型
 typedef int TYPE_HASH_KEYVAL; //hash keyval类型
 #define KEY_INIT (-111111)
-#define KEYVAL_INIT (-111111)
+#define KEYVAL_INIT (0)
 #define HASH_ERROR (-1)
 
-#define HASH_MOD_PRIME (40001)  //散列函数（模运算）中的模
-#define HASH_SIZE (50001) //哈希表允许最大的容量
+#define HASH_MOD_PRIME (20001)  //散列函数（模运算）中的模
+#define HASH_SIZE (30001) //哈希表允许最大的容量
 //哈希函数
 int hash_func(TYPE_HASHFUNC_IN i){
 	int key = i % HASH_MOD_PRIME;
@@ -59,7 +59,7 @@ int NextPrime( int N )
 函数名：	hashTable_init
 函数功能：  初始化哈希表
 函数输入：  int 	tableSize   哈希表的长度
-函数输出：  pHashTable 初始化后的哈希表管理节点指针
+函数输出：  pMHNode 初始化后的哈希表管理节点指针
 *************************************************/
 pMHNode hashTable_init(int tableSize){
 	pMHNode h  = (pMHNode)malloc(sizeof(MHNode));
@@ -77,7 +77,7 @@ pMHNode hashTable_init(int tableSize){
 	//初始化哈希表数据节点
 	for( i = 0; i < tableSize; i++ ){
 		h->data[i].key = KEY_INIT;
-		h->data[i].key_val = KEYVAL_INIT;//key_val初始化为-1
+		h->data[i].key_val = KEYVAL_INIT;//key_val初始化为0
 		h->data[i].flag = EMPTY;//初始化为空
 	}
 	return h;
@@ -86,18 +86,18 @@ pMHNode hashTable_init(int tableSize){
 /************************************************
 函数名：	hashTable_insert
 函数功能：  往哈希表插入一个数据
-函数输入：  pHashTable 			h       哈希表管理节点指针
+函数输入：  pMHNode 			h       哈希表管理节点指针
 			TYPE_HASH_KEY 		key     插入节点的键
 			TYPE_HASH_KEYVAL    key_val 插入节点的键值
 函数输出：  1 插入成功
 			HASH_ERROR 插入失败
 *************************************************/
-int hashTable_insert(pMHNode h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL key_val){
+int hashTable_insert(pMHNode h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL val){
 	int idx = hash_func(key);
 	int conflict_num = 0;
 	if(LEGITIMATE != (h->data[idx].flag)){//该位置没有被占（包括删除与空状态）
 		h->data[idx].key = key; //写入数据
-		h->data[idx].key_val = key_val;
+		h->data[idx].key_val = val;
 		h->data[idx].flag = LEGITIMATE;
 		return 1;//写入成功
 	}
@@ -111,7 +111,7 @@ int hashTable_insert(pMHNode h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL key_val){
 		idx = (++idx) % HASH_SIZE;//idx+1
 		if(LEGITIMATE != (h->data[idx].flag)){//线性探测，该位置没有被占
 			h->data[idx].key = key; //写入数据
-			h->data[idx].key_val = key_val;
+			h->data[idx].key_val = val;
 			h->data[idx].flag = LEGITIMATE;
 			return 1;//写入成功
 		}
@@ -119,17 +119,36 @@ int hashTable_insert(pMHNode h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL key_val){
 	}
 	return HASH_ERROR;//插入失败
 }
-
+/************************************************
+函数名：	hashTable_newval
+函数功能：  往哈希表更新key下的key_Val
+函数输入：   pMHNode 			h       哈希表管理节点指针
+			TYPE_HASH_KEY 		key     插入节点的键
+			TYPE_HASH_KEYVAL    new_val 插入节点的新键值
+函数输出：  1 插入成功
+			HASH_ERROR 插入失败
+*************************************************/
+int hashTable_newval(pMHNode h, TYPE_HASH_KEY key, TYPE_HASH_KEYVAL new_val){
+    if(hashTable_search(h, key) != HASH_ERROR){
+        int idx = hash_func(key);
+        h->data[idx].key_val = new_val;
+        return 1;
+    }
+	else{
+        printf("key:%d 不在哈希表内\n", key);
+        return HASH_ERROR;
+    }
+}
 
 /************************************************
 函数名：	hashTable_search
 函数功能：  根据key查找哈希表
-函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输入：  pMHNode 		h       哈希表管理节点指针
 			TYPE_HASH_KEY 	key     插入节点的键
 函数输出：  查找成功则返回对应的key_val
 			HASH_ERROR 查找失败
 *************************************************/
-int hashTable_search(pMHNode h, TYPE_HASH_KEY key){
+TYPE_HASH_KEYVAL hashTable_search(pMHNode h, TYPE_HASH_KEY key){
 	int idx = hash_func(key);
 	while((h->data[idx].key != key) && (h->data[idx].flag != EMPTY)){
 		idx = (++idx) % HASH_SIZE;
@@ -156,7 +175,7 @@ int hashTable_delete(pMHNode h, TYPE_HASH_KEY key){
 	if(h->data[idx].key == key){//找到了该键的位置
 		//初始化
 		h->data[idx].key = KEY_INIT;
-		h->data[idx].key_val = KEYVAL_INIT;
+		h->data[idx].key_val = KEYVAL_INIT;//key_val初始化为0
 		h->data[idx].flag = DELETED;//键标志修改为删除
 		return 1;
 	} 	
@@ -166,7 +185,7 @@ int hashTable_delete(pMHNode h, TYPE_HASH_KEY key){
 /************************************************
 函数名：	hashTable_traverse
 函数功能：  遍历哈希表
-函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输入：  pMHNode 		h       哈希表管理节点指针
 函数输出：  无
 *************************************************/
 void hashTable_traverse(pMHNode h){
@@ -178,14 +197,14 @@ void hashTable_traverse(pMHNode h){
 	printf("idx   key  key_val   flag\n");	
 	int i;
 	for(i=0; i<(h->size_table); i++){
-		printf("%d,    %d,   %d,  %d\n", i, h->data[i].key, h->data[i].key_val, h->data[i].flag);
+		printf("%d,    %d,   %d,    %d\n", i, h->data[i].key, h->data[i].key_val, h->data[i].flag);
 	}
 	return ;	
 }
 /************************************************
 函数名：	hashTable_destroy
 函数功能：  删除哈希表
-函数输入：  pHashTable 		h       哈希表管理节点指针
+函数输入：  pMHNode 		h       哈希表管理节点指针
 函数输出：  1 删除成功
 			HASH_ERROR 删除失败
 *************************************************/
@@ -199,6 +218,48 @@ int hashTable_destroy(pMHNode h){
 }
 
 #define MAX(a, b) ((a) >= (b) ? (a):(b))
+/*
+ * 基于哈希表
+ * 时间复杂度O（n）
+ * keyval存储的是以key为边界的最大连续长度
+ * 1.初始化哈希表
+ * 2.for（ 哈希表的每个元素x ）
+ *       (i)  如果在哈希表内有该元素，则结束本次循环
+ *       (ii) 如果不在哈希表内，则其keyval(x)= keyval(x - 1) + keyval(x + 1) + 1 （原因在于x不出现在当前的哈希表中，所以最大连续长度(x - 1)肯定是以x - 1结尾连续串，最大连续长度(x + 1)肯定是以x + 1开头的连续串）；然后将keyval(x)插入哈希表内，并更新边界keyval(x - keyval(x - 1))和keyval(x + keyval(x + 1))的值为keyval(x)（注意不需要去更新边界内部的值，因为他们本身已经在哈希表内，如果遇见他们会在(i)步骤中跳过）
+ * 3.销毁哈希表
+ *          
+ */
+int longestConsecutive(int* nums, int numsSize) {
+    if(nums == NULL || numsSize == 0)
+        return 0;
+    
+    int len_lc = 0;
+    pMHNode hash_head = hashTable_init(HASH_SIZE);
+    for( int i = 0; i < numsSize; i++ ){
+        //如果之前已经遇见过，则跳出
+        if(hashTable_search(hash_head, nums[i]) != HASH_ERROR)
+            continue;
+        //新数据记录
+        TYPE_HASH_KEYVAL cur_len_lc = 1;
+        TYPE_HASH_KEYVAL left, right;
+        /* 
+         * 如果之前没有出现过
+         */
+        left = hashTable_search(hash_head, nums[i] - 1);
+        left = (left == HASH_ERROR ? 0 : left);
+        right = hashTable_search(hash_head, nums[i] + 1);
+        right = (right == HASH_ERROR ? 0 : right);
+        cur_len_lc += (left + right);
+        hashTable_insert(hash_head, nums[i], cur_len_lc);
+        hashTable_newval(hash_head, nums[i] - left, cur_len_lc);
+        hashTable_newval(hash_head, nums[i] + right, cur_len_lc);
+        len_lc = MAX(len_lc, cur_len_lc);
+    }
+    hashTable_destroy(hash_head);
+    return len_lc;
+}
+/*
+ * 这种方法的时间复杂度偏高，特别是在输入的是连续的数据时时间复杂度可以达到O（n^2）
 int longestConsecutive(int* nums, int numsSize) {
     int len_lc = 0;
     pMHNode hash_head = hashTable_init(HASH_SIZE);
@@ -219,7 +280,5 @@ int longestConsecutive(int* nums, int numsSize) {
     }
     hashTable_destroy(hash_head);
     return len_lc;
-}
-
-
+}*/
 
