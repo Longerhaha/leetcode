@@ -1,0 +1,28 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+/*
+ * 你能否不使用额外空间解决此题意味着不能使用哈希表解决问题
+ * 使用快慢双指针法
+ * p_fast走两步，p_slow走一步，如果二者能够相遇则肯定有圈
+ */
+bool hasCycle(struct ListNode *head) {
+    if(head == NULL)
+        return false;
+    else if(head->next == NULL)
+        return false;
+    
+    struct ListNode* p_fast = head, *p_slow = head;
+    while(p_fast != NULL){
+        p_fast = p_fast->next == NULL ? NULL : p_fast->next->next;
+        p_slow = p_slow->next;
+        if(p_fast == p_slow)
+            return true;
+    }
+    return false;
+}
