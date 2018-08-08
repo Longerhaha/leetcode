@@ -36,12 +36,11 @@
 
 函数输入与输出：
 * 输入：
-	* int* nums: 输入数组的指针
-	* int numsSize: 输入数组的长度
+	* struct ListNode *head: 链表头结点指针
 
 
 * 输出：
-	* struct ListNode *head: 链表头结点指针
+	* bool：是否是环形链表
 
 ## 思路			
 ### 快慢双指针法
