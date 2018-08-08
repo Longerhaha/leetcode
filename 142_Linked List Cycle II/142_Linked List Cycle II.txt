@@ -1,0 +1,37 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+struct ListNode *detectCycle(struct ListNode *head) {
+    if(head == NULL)
+        return false;
+    else if(head->next == NULL)
+        return false;
+    
+    /*
+     * 1. 首先确定是不是环，不是环则直接返回空
+     * 2. 如果是环的话，其肯定在环中的某个节点相遇了，此时p_slow走了x步，p_fast走了2x步，二者相减刚好是一圈环的长度
+     *    不妨设此时p_slow与环重叠了y个元素，则非环元素有x-y个，此时p_fast需要再走x-y步到环的起点，p_slow如果从头走需要再走x-y步到环的起点
+     * 3. p_slow从头开始一步一步的走，p_fast从相遇的地方一步步的走，二者再次相遇的点就是起点
+     */
+    struct ListNode* p_fast = head, *p_slow = head;
+    while(p_fast != NULL){
+        p_fast = p_fast->next == NULL ? NULL : p_fast->next->next;
+        p_slow = p_slow->next;
+        if(p_fast == p_slow) //相遇后跳出循环
+            break;
+    }
+    //不是环
+    if(p_fast == NULL)
+        return NULL;
+    //p_slow指针从头开始走，p_fast继续走直到二者相遇
+    p_slow = head;
+    while(p_fast != p_slow){
+        p_fast =p_fast->next;
+        p_slow = p_slow->next;
+    }
+    return p_fast;
+}
