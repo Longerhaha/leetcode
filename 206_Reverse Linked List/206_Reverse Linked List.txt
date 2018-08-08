@@ -1,0 +1,31 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+/*
+ * 三指针迭代反转链表法
+ */
+
+struct ListNode* reverseList(struct ListNode* head) {
+    if(head == NULL)
+        return NULL;
+    
+    struct ListNode* pre = head;
+    struct ListNode* cur = pre == NULL ? NULL : pre->next;
+    struct ListNode* next = cur == NULL ? NULL : cur->next;
+    
+    while(cur != NULL){
+        //反转
+        cur->next = pre;
+        //调整指针
+        pre = cur;
+        cur = next;
+        next = cur == NULL ? NULL : cur->next;
+    }
+    head->next = NULL;
+    return pre;
+}
