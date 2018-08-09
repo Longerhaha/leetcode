@@ -1,0 +1,65 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+/*
+ * 反转链表
+ */
+struct ListNode* reverseList(struct ListNode* head) {
+    if(head == NULL)
+        return NULL;
+
+    struct ListNode* pre = head;
+    struct ListNode* cur = pre == NULL ? NULL : pre->next;
+    struct ListNode* next = cur == NULL ? NULL : cur->next;
+
+    while(cur != NULL){
+        //反转
+        cur->next = pre;
+        //调整指针
+        pre = cur;
+        cur = next;
+        next = cur == NULL ? NULL : cur->next;
+    }
+    head->next = NULL;
+    return pre;
+}
+/*
+ * 1. 先找到后半部分的头(快慢双指针法)
+ * 2. 反转后半部分
+ * 3. 连接两个链表
+ */
+void reorderList(struct ListNode* head) {
+    /*
+     * 输入为空或者只有一个节点或者只有两个节点时不需要重排
+     */
+    if(head == NULL || head->next == NULL || head->next->next == NULL)
+        return head;
+    //1.快慢双指针法找后半段的头
+    struct ListNode* slow = head, * fast = head->next->next;
+    while( fast != NULL ){
+        slow = slow->next;
+        fast = fast->next == NULL ? NULL : fast->next->next;
+    }
+    //此时slow的后第一个位置就是后半段的头,在这里断开与后面的连接变成两个链表
+    struct ListNode* head2 = slow->next;
+    slow->next = NULL;
+    //2.反转后半部分
+    head2 = reverseList(head2);
+    //3.连接两个链表
+    //struct ListNode* connnect_head = head;
+    while( head2 != NULL ){
+        struct ListNode* next1 = head->next;
+        struct ListNode* next2 = head2->next;
+        head->next = head2;
+        head2->next = next1;
+        
+        head = next1;
+        head2 = next2;
+    }
+    //return connnect_head;
+}
