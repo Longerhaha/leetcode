@@ -1,0 +1,277 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+/*
+ * 归并排序(O(n log n) 时间复杂度、常数级空间复杂度)
+ * 1.快慢双指针法拆分前后链表
+ * 2.递归前链表，递归后链表
+ * 3.合并链表
+ */
+#define MERGE_SORT 1
+/*
+ * 堆排序(O(n log n) 时间复杂度、O(n)空间复杂度)
+ * 1.堆初始化
+ * 2.建立基于链表结构数据的堆
+ * 3.一个个更新链表结构数据为堆中删除的数直至链表的尾巴
+ */
+#define HEAP_SORT 2
+
+#define ALGO_SELECT 2
+/*
+ * 两个有序链表的合并
+ */
+struct ListNode* mergeTwoLists(struct ListNode* l1, struct ListNode* l2) {
+    /*method1*/
+    struct ListNode* head_merge_order_List;
+    struct ListNode* tail_merge_order_List;
+    
+    if(NULL == l1)
+        return l2;
+    
+    if(NULL == l2)
+        return l1;
+    
+    if(l1->val <= l2->val){
+        head_merge_order_List = l1;
+        l1 = l1->next;
+    }   
+    else{
+        head_merge_order_List = l2;
+        l2 = l2->next;
+    }
+    
+    tail_merge_order_List = head_merge_order_List;
+    while(l1 != NULL &&  l2 != NULL){
+        if(l1->val <= l2->val){
+            tail_merge_order_List->next = l1;
+            l1 = l1->next;
+            tail_merge_order_List = tail_merge_order_List->next;
+        }
+        else{
+            tail_merge_order_List->next = l2;
+            l2 = l2->next;
+            tail_merge_order_List = tail_merge_order_List->next;
+        }  
+    }
+    
+    if(NULL == l1)
+        tail_merge_order_List->next = l2;
+    if(NULL == l2)
+        tail_merge_order_List->next = l1;
+    
+    return head_merge_order_List;
+    
+    /*method 2
+    struct ListNode* head_merge_order_List;
+    
+    if(NULL == l1)
+        return l2;
+    
+    if(NULL == l2)
+        return l1;
+    
+    
+    if(l1->val <= l2->val){
+        head_merge_order_List = l1;
+        head_merge_order_List->next = mergeTwoLists(l1->next, l2);
+    }
+    else{
+        head_merge_order_List = l2;
+        head_merge_order_List->next = mergeTwoLists(l1, l2->next);
+    }  
+
+    return head_merge_order_List;*/
+}
+
+#if ALGO_SELECT == MERGE_SORT
+    /*
+     * 使用归并方法对链表进行排序
+     */
+    struct ListNode* mergeSortList(struct ListNode* head){
+        /*
+         * 输入为空或者只有一个节点不需要排列
+         */
+        if(head == NULL || head->next == NULL)
+            return head;
+        
+        //1.快慢双指针法找后半段的头
+        struct ListNode* slow = head, * fast = head->next->next;
+        while( fast != NULL ){
+            slow = slow->next;
+            fast = fast->next == NULL ? NULL : fast->next->next;
+        }
+        //此时slow的后第一个位置就是后半段的头,在这里断开与后面的连接变成两个链表
+        struct ListNode* head2 = slow->next;
+        slow->next = NULL;
+        
+        //2. 归并两个链表为有序的链表
+        struct ListNode* sort_head1 = mergeSortList(head);
+        struct ListNode* sort_head2 = mergeSortList(head2);
+        //3. 合并为单个链表
+        return mergeTwoLists(sort_head1, sort_head2);
+    }
+    
+    
+    struct ListNode* sortList(struct ListNode* head) {
+        return mergeSortList(head);
+    }
+#elif ALGO_SELECT == HEAP_SORT //注意其空间复杂度非常数级
+    /*
+     * 这是一个最小堆（带哨兵）实现的源文件
+     */
+    typedef int heapNodeType;
+    #define MAX_HEAP_LEN 100000
+    const heapNodeType guard = -2147483648;//哨兵是最小的数
+
+    typedef struct minHeap_tag* p_minHeap;
+    typedef struct minHeap_tag{
+        heapNodeType* data; //最小堆的数据源
+        int size; //当前最小堆的长度
+        int capacity;//最小堆的容量
+    }minHeap;
+
+    /************************************************
+    函数名：	minHeap_init
+    函数功能：  初始化最小堆
+    函数输入：  无
+    函数输出：  p_minHeap 初始化后的最小堆节点指针
+    *************************************************/
+    p_minHeap minHeap_init(){
+        p_minHeap h = (p_minHeap)malloc(sizeof(minHeap));
+        if(h == NULL){
+            printf("malloc minHeap memory error!\n");
+            exit(EXIT_FAILURE);
+        }
+        h->data = (heapNodeType*)malloc(sizeof(heapNodeType) * (MAX_HEAP_LEN + 1));
+        if(h->data == NULL){
+            printf("malloc minHeap->data memory error!\n");
+            exit(EXIT_FAILURE);
+        }
+        h->data[0] = guard;
+        h->size = 0;
+        h->capacity = MAX_HEAP_LEN;
+        return h;
+    }
+
+
+    /************************************************
+    函数名：	minHeap_insert
+    函数功能：  往最小堆插入一个数据
+    函数输入：  无
+    函数输出：  0:插入失败 1:插入成功
+    *************************************************/
+    int minHeap_insert(p_minHeap h, heapNodeType val){
+        if(h->size >= h->capacity){
+            printf("the data memory of heap is full!\n");
+            return 0;
+        }
+        int idx = ++h->size;
+        /* 
+         * 调整位置，这种调整方法成为上滤
+         */
+        for( ; h->data[idx/2] > val ; idx /= 2 )
+            h->data[idx] = h->data[idx/2];
+        h->data[idx] = val;
+        return 1;
+    }
+
+    /************************************************
+    函数名：	minHeap_build（最坏复杂度O(nlogn)，平均复杂度O(n)）
+    函数功能：  建立链表形式数据的最小堆
+    函数输入：  无
+    函数输出：  1:成功 0:失败
+    *************************************************/
+    int minHeap_build(p_minHeap h, struct ListNode* head){
+        while(head != NULL){
+            if( 0 == minHeap_insert(h, head->val)){
+                h->size = 0;
+                return 0;
+            }
+            head = head->next;
+        }
+        return 1;
+    }
+
+    /************************************************
+    函数名：	minHeap_delete（复杂度O(logn)）
+    函数功能：  删除最小堆堆顶的元素
+    函数输入：  p_minHeap h：最小堆指针
+    函数输出：  1:成功 0:失败
+    *************************************************/
+    heapNodeType minHeap_delete(p_minHeap h){
+        if(h->size <= 0){
+            printf("there is no data in min_heap.\n");
+            exit(EXIT_FAILURE);
+        }
+        heapNodeType delete_data = h->data[1];
+        /*
+         * 把尾巴数据放在第一个，然后不断往下调整，这也称为下滤
+         */
+        h->data[1] = h->data[h->size--];
+        for( int idx = 1; idx * 2 <= h->size; ){
+            int tmp = h->data[idx];
+            //如果此时没有右孩子则只需要比较自己和左孩子即可
+            if(idx * 2  + 1 > h->size && h->data[idx] > h->data[idx * 2]){
+                h->data[idx] = h->data[idx * 2];
+                h->data[idx * 2] = tmp;
+                idx = idx * 2;
+            }
+            //否则都需要比较
+            else{
+                //看是左孩子小还是右孩子小
+                int child_min_idx;
+                int child_min_val;
+                if(h->data[2 * idx] <= h->data[2 * idx + 1]){
+                    child_min_idx = 2 * idx;
+                    child_min_val = h->data[2 * idx];
+                }
+                else{
+                    child_min_idx = 2 * idx + 1;
+                    child_min_val = h->data[2 * idx + 1];
+                }
+                //自己与孩子中较小的做比较
+                if(h->data[idx] > child_min_val){
+                    
+                    h->data[idx] = child_min_val;
+                    h->data[child_min_idx] = tmp;
+                    idx = child_min_idx;
+                }
+                //如果自己比孩子小则退出循环
+                else
+                    break;
+            } 	
+        }
+        return delete_data;
+    }
+
+    struct ListNode* sortList(struct ListNode* head) {
+        /*
+         * 输入为空或者只有一个节点不需要排列
+         */
+        if(head == NULL || head->next == NULL)
+            return head;
+        
+        p_minHeap  h = minHeap_init();
+        minHeap_build(h, head);
+        struct ListNode* tmp = head;
+        while( tmp != NULL){
+            tmp->val = minHeap_delete(h);
+            tmp = tmp->next;
+        }
+        return head;
+    }
+
+#endif
+
+
+
+
+
+
+
+
