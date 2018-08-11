@@ -1,0 +1,190 @@
+/*
+ * 这是一个基于数组数据的队列（循环队列）文件
+ */
+typedef int elemType;
+#define QUEUE_ERROR (-111111)
+#define QUEUE_SIZE 1000
+#define ARRAY_SIZE (QUEUE_SIZE + 1)
+
+/*
+ * 链队列的信息指针
+ * 链表的头、尾巴以及长度信息
+ */
+typedef struct queue_tag* p_queue;
+typedef struct queue_tag{
+	elemType* data;
+    int front; //队列头部的下标
+    int rear; //队列尾部的下标
+	//int queue_num;//数组好算长度，这里省去该元素
+}queue;
+/*
+ * 队列的初始化
+ * 初始化失败停止程序，因为可能系统内存满了或者奔溃了
+ */
+p_queue queue_init(void){
+    p_queue q = (p_queue)malloc(sizeof(queue));
+	assert(q != NULL);
+	
+	q->data = (elemType*)malloc(sizeof(elemType) * ARRAY_SIZE);
+	assert(q->data != NULL);
+	
+    q->front = 1;
+    q->rear  = 0;
+	//head->queue_num = 0;
+    return q;
+}
+
+/*
+ * 判断链队列是否为空
+ */
+int queue_is_empty(const p_queue q){
+    return (q->rear + 1) % ARRAY_SIZE == q->front;
+}
+
+/*
+ * 判断链队列是否满
+ */
+int queue_is_full(const p_queue q){
+    return (q->rear + 2) % ARRAY_SIZE == q->front;
+}
+
+/*
+ * 往队列插入一个数据
+ * 队列满返回-1;插入成功，返回1
+ */
+int queue_in(p_queue q, const elemType insert_data){
+
+    if(queue_is_full(q)){
+		printf("queue is full!\n");
+		return QUEUE_ERROR;
+	}  
+	q->data[(++q->rear) % ARRAY_SIZE] = insert_data;
+    return 1;
+}
+    
+/*
+ * 往队列弹出一个数据
+ * 即从头出去
+ * 若队列为空，则返回QUEUE_ERROR;队列不空，则返回队列出来的数据
+ */
+elemType queue_out(p_queue q){
+	if(queue_is_empty(q)){
+		printf("queue is empty!\n");
+		return QUEUE_ERROR;
+	}
+    return q->data[(q->front++) % ARRAY_SIZE];
+}
+    
+/*
+ * 返回队列的头结点数据
+ * 若队列为空，则返回QUEUE_ERROR
+ */
+elemType queue_top(const p_queue q){
+    if(queue_is_empty(q)){
+		printf("queue is empty!\n");
+		return QUEUE_ERROR;
+	}
+    else
+        return q->data[q->front];
+}
+
+/*
+ * 队列的遍历
+ * 注意如果你更改了elemType，则相对应修改printf的格式化输出
+ */
+void queue_traverse(const p_queue q){
+    if(queue_is_empty(q)){
+        printf("queue is empty\n");
+		return ;
+    }
+	
+	printf("queue traverse:\n");
+	for( int start = q->front; start % ARRAY_SIZE <= q->rear; start++ ){
+		printf("%d ", q->data[start]);
+	}
+    printf("\n"); 
+}
+
+
+/*
+ * BFS查看是否有被环绕的区域
+ */
+void region_bfs(char** board, p_queue q, int* visit, const int boardRowSize, const int boardColSize, int row, int col){
+    int path[boardRowSize * boardColSize];
+    for( int i = 0; i < boardRowSize * boardColSize; i++ )
+        path[i] = 0;
+    
+    queue_in(q, search);
+    visit[search] = 1;
+    path[search] = row * boardRowSize + col;
+    int across_border = 0;
+    int idx;
+    while( !queue_is_empty(q) ){
+        /*
+         * 1.检查是否是边界
+         * 2.BFS相邻的点并记录路径
+         */
+        idx = queue_out(q);
+        printf("search = %d, idx of queue_out = %d, across_border = %d\n", search, idx, across_border);
+        
+        //检查是否是边界
+        if(row == 0 || row == boardRowSize - 1 || col == 0  || row == boardColSize - 1)
+            across_border = 1;
+        
+        //2.BFS相邻的点并记录路径
+        if(idx - 4 >= 0 && visit[idx - 4] == 0 && *((char*)board + idx - 4) == 'O'){
+            queue_in(q, idx - 4);
+            visit[idx - 4] = 1;
+            path[idx - 4] = idx;
+        }
+            
+        if(idx - 1 >= (idx / boardColSize) * boardColSize  && visit[idx - 1] == 0 && *((char*)board + idx - 1) == 'O'){
+            queue_in(q, idx - 1);
+            visit[idx - 1] = 1;
+            path[idx - 1] = idx;
+        }
+        if(idx + 1 <= ((idx / boardColSize + 1) * boardColSize -1) && visit[idx + 1] == 0 && *((char*)board + idx + 1) == 'O'){
+            queue_in(q, idx + 1);
+            visit[idx + 1] = 1;
+            path[idx + 1] = idx;
+        }
+        if(idx + 4 <= boardRowSize * boardColSize - 1 && visit[idx + 4] == 0 && *((char*)board + idx + 4) == 'O'){
+            queue_in(q, idx + 4);
+            visit[idx + 4] = 1;
+            path[idx + 4] = idx;
+        }
+    }
+
+    /*
+     * 如果经过了边界，就不是包围的区域，不必做处理
+     * 如果不经过边界，则是有效的包围区域，路径上面的点全部处理为'X'
+     */
+    if(!across_border){
+        while( path[idx] != idx){
+            *((int*)board + idx) = 'X';
+            idx = path[idx];
+        }
+    }
+    
+}
+
+
+void solve(char** board, int boardRowSize, int boardColSize) {
+    
+    int visit[boardRowSize * boardColSize];
+    for( int i = 0; i < boardRowSize * boardColSize; i++ )
+        visit[i] = 0;
+    
+    p_queue q = queue_init();
+    
+    for( int i = 0; i < boardRowSize; i++ ){
+        for( int j = 0; j < boardColSize; j++ ){
+            if(board[i][j] == 'O' && visit[i * boardRowSize + j] == 0){
+                //printf("%d\n", i * boardRowSize + j);
+                region_bfs(board, q, visit, boardRowSize, boardColSize, i, j);
+            }
+                
+        }
+    }
+
+}
