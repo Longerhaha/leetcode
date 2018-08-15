@@ -1,193 +1,241 @@
-/*
- * 这是一个基于数组数据的队列（循环队列）文件
- */
-typedef int elemType;
-#define QUEUE_ERROR (-111111)
-#define QUEUE_SIZE 1000
-#define ARRAY_SIZE (QUEUE_SIZE + 1)
+#define BFS 1
+#define DFS 2
 
-/*
- * 链队列的信息指针
- * 链表的头、尾巴以及长度信息
- */
-typedef struct queue_tag* p_queue;
-typedef struct queue_tag{
-	elemType* data;
-    int front; //队列头部的下标
-    int rear; //队列尾部的下标
-	//int queue_num;//数组好算长度，这里省去该元素
-}queue;
-/*
- * 队列的初始化
- * 初始化失败停止程序，因为可能系统内存满了或者奔溃了
- */
-p_queue queue_init(void){
-    p_queue q = (p_queue)malloc(sizeof(queue));
-	assert(q != NULL);
-	
-	q->data = (elemType*)malloc(sizeof(elemType) * ARRAY_SIZE);
-	assert(q->data != NULL);
-	
-    q->front = 1;
-    q->rear  = 0;
-	//head->queue_num = 0;
-    return q;
-}
+#define ALGO_SELECT 1
 
-/*
- * 判断链队列是否为空
- */
-int queue_is_empty(const p_queue q){
-    return (q->rear + 1) % ARRAY_SIZE == q->front;
-}
 
-/*
- * 判断链队列是否满
- */
-int queue_is_full(const p_queue q){
-    return (q->rear + 2) % ARRAY_SIZE == q->front;
-}
 
-/*
- * 往队列插入一个数据
- * 队列满返回-1;插入成功，返回1
- */
-int queue_in(p_queue q, const elemType insert_data){
 
-    if(queue_is_full(q)){
-		printf("queue is full!\n");
-		return QUEUE_ERROR;
-	}  
-	q->data[(++q->rear) % ARRAY_SIZE] = insert_data;
-    return 1;
-}
-    
-/*
- * 往队列弹出一个数据
- * 即从头出去
- * 若队列为空，则返回QUEUE_ERROR;队列不空，则返回队列出来的数据
- */
-elemType queue_out(p_queue q){
-	if(queue_is_empty(q)){
-		printf("queue is empty!\n");
-		return QUEUE_ERROR;
-	}
-    return q->data[(q->front++) % ARRAY_SIZE];
-}
-    
-/*
- * 返回队列的头结点数据
- * 若队列为空，则返回QUEUE_ERROR
- */
-elemType queue_top(const p_queue q){
-    if(queue_is_empty(q)){
-		printf("queue is empty!\n");
-		return QUEUE_ERROR;
-	}
-    else
-        return q->data[q->front];
-}
+#if ALGO_SELECT == BFS
+    /*
+     * 这是一个基于结构体数组数据的队列（循环队列）文件
+     */
+    typedef struct sNode_tag* p_sNode;
+    typedef struct sNode_tag{
+        int x;
+        int y;
+    }sNode;
 
-/*
- * 队列的遍历
- * 注意如果你更改了elemType，则相对应修改printf的格式化输出
- */
-void queue_traverse(const p_queue q){
-    if(queue_is_empty(q)){
-        printf("queue is empty\n");
-		return ;
+
+    #define QUEUE_ERROR ((p_sNode)NULL)
+    #define QUEUE_FULL (-1)
+    #define QUEUE_SIZE 1000
+    #define ARRAY_SIZE (QUEUE_SIZE + 1)
+
+    /*
+     * 链队列的信息指针
+     * 链表的头、尾巴以及长度信息
+     */
+    typedef struct queue_tag* p_queue;
+    typedef struct queue_tag{
+        p_sNode data;
+        int front; //队列头部的下标
+        int rear; //队列尾部的下标
+        //int queue_num;//数组好算长度，这里省去该元素
+    }queue;
+    /*
+     * 队列的初始化
+     * 初始化失败停止程序，因为可能系统内存满了或者奔溃了
+     */
+    p_queue queue_init(void){
+        p_queue q = (p_queue)malloc(sizeof(queue));
+        assert(q != NULL);
+
+        q->data = (p_sNode)malloc(sizeof(sNode) * ARRAY_SIZE);
+        assert(q->data != NULL);
+
+        q->front = 1;
+        q->rear  = 0;
+        //head->queue_num = 0;
+        return q;
     }
-	
-	printf("queue traverse:\n");
-	for( int start = q->front; start % ARRAY_SIZE <= q->rear; start++ ){
-		printf("%d ", q->data[start]);
-	}
-    printf("\n"); 
-}
+
+    /*
+     * 判断链队列是否为空
+     */
+    static int queue_is_empty(const p_queue q){
+        return (q->rear + 1) % ARRAY_SIZE == q->front;
+    }
+
+    /*
+     * 判断链队列是否满
+     */
+    static int queue_is_full(const p_queue q){
+        return (q->rear + 2) % ARRAY_SIZE == q->front;
+    }
+
+    /*
+     * 往队列插入一个数据
+     * 队列满返回-1;插入成功，返回1
+     */
+    int queue_in(p_queue q, p_sNode insert_s){
+
+        if(queue_is_full(q)){
+            printf("queue is full!\n");
+            return QUEUE_FULL;
+        }  
+        memcpy(q->data + (++q->rear % ARRAY_SIZE), insert_s, sizeof(sNode));
+        //q->data[q->rear % ARRAY_SIZE].x = insert_s->x;
+        //q->data[q->rear % ARRAY_SIZE].y = insert_s->y;
+        //q->rear++;
+        //q->data[(++q->rear) % ARRAY_SIZE] = insert_data;
+        return 1;
+    }
+
+    /*
+     * 往队列弹出一个数据
+     * 即从头出去
+     * 若队列为空，则返回QUEUE_ERROR;队列不空，则返回队列出来的数据
+     */
+    p_sNode queue_out(p_queue q){
+        if(queue_is_empty(q)){
+            printf("queue is empty!\n");
+            return QUEUE_ERROR;
+        }
+        //p_sNode ret =  q->data[q->front % ARRAY_SIZE];
+        //printf("%d %d\n", (q->data + q->front % ARRAY_SIZE)->x, (q->data + q->front % ARRAY_SIZE)->y);
+        return (q->data + (q->front++) % ARRAY_SIZE);
+    }
+
+    /*
+     * 返回队列的头结点数据
+     * 若队列为空，则返回QUEUE_ERROR
+     */
+    p_sNode queue_top(const p_queue q){
+        if(queue_is_empty(q)){
+            printf("queue is empty!\n");
+            return QUEUE_ERROR;
+        }
+        else
+            return q->data + q->front;
+    }
 
 
-/*
- * BFS查看是否有被环绕的区域
- */
-void region_bfs(char** board, p_queue q, int* visit, const int boardRowSize, const int boardColSize, const int search){
-    //flag记录是否被遍历
-    int flag[boardRowSize * boardColSize];
-    for( int i = 0; i < boardRowSize * boardColSize; i++ )
-        flag[i] = 0;
-    
-    queue_in(q, search);
-    visit[search] = 1;
-    //flag[search] = 1;
-    int across_border = 0;
-    int idx;
-    while( !queue_is_empty(q) ){
-        /*
-         * 1.检查是否是边界
-         * 2.BFS相邻的点并记录路径
-         */
-        idx = queue_out(q);
-        flag[idx] = 1;
-        //检查是否是边界
-        if(idx / boardColSize == 0 || idx / boardColSize == boardRowSize - 1 || idx % boardColSize == 0  || idx % boardColSize == boardColSize - 1)
-            across_border = 1;
-        //printf("search = %d, idx of queue_out = %d, across_border = %d\n", search, idx, across_border);
-        //2.BFS相邻的点并记录路径
-        //if(idx - 4 >= 0 && visit[idx - 4] == 0 && *((char*)board + idx - 4) == 'O'){
-        if(idx - boardColSize >= 0 && visit[idx - boardColSize] == 0 && board[(idx - boardColSize) / boardColSize][(idx - boardColSize) % boardColSize] == 'O'){
-            queue_in(q, idx - boardColSize);
-            visit[idx - boardColSize] = 1;
-            //path[idx - boardColSize] = idx;
+
+    /*
+     * 队列的遍历
+     * 注意如果你更改了elemType，则相对应修改printf的格式化输出
+     */
+    void queue_traverse(const p_queue q){
+        if(queue_is_empty(q)){
+            printf("queue is empty\n");
+            return ;
         }
-            
-        if(idx - 1 >= (idx / boardColSize) * boardColSize  && visit[idx - 1] == 0 && board[(idx - 1) / boardColSize][(idx - 1) % boardColSize] == 'O'){
-            queue_in(q, idx - 1);
-            visit[idx - 1] = 1;
-            //path[idx - 1] = idx;
+
+        printf("queue traverse:\n");
+        for( int start = q->front; start % ARRAY_SIZE <= q->rear; start++ ){
+            printf("%d %d ", (q->data + start)->x, (q->data + start)->y);
         }
-        if(idx + 1 <= ((idx / boardColSize + 1) * boardColSize -1) && visit[idx + 1] == 0 && board[(idx + 1) / boardColSize][(idx + 1) % boardColSize] == 'O'){
-            queue_in(q, idx + 1);
-            visit[idx + 1] = 1;
-            //path[idx + 1] = idx;
-        }
-        if(idx + boardColSize <= boardRowSize * boardColSize - 1 && visit[idx + boardColSize] == 0 && board[(idx + boardColSize) / boardColSize][(idx + boardColSize) % boardColSize] == 'O'){
-            queue_in(q, idx + boardColSize);
-            visit[idx + boardColSize] = 1;
-            //path[idx + boardColSize] = idx;
+        printf("\n"); 
+    }
+
+    /*
+     * 队列的销毁
+     */
+    void queue_destroy(const p_queue q){
+        free(q->data);
+        free(q);
+    }
+
+    /*
+     * BFS查看是否有被环绕的区域
+     */
+    void region_bfs(char** board, p_queue q, const int i, const int j, const int boardRowSize, const int boardColSize){
+
+        board[i][j] = '*';
+        //flag记录是否被遍历
+        sNode node;
+        node.x = i;
+        node.y = j;
+        queue_in(q, &node);
+        p_sNode out_node;
+        while( !queue_is_empty(q) ){
+            out_node = queue_out(q);
+            //printf("%d %d %d\n", q->front, q->rear, queue_is_empty(q));
+            if(out_node->x - 1 >= 0 && board[out_node->x - 1][out_node->y] == 'O'){
+                node.x = out_node->x - 1;
+                node.y = out_node->y;
+                board[out_node->x - 1][out_node->y] = '*';
+                queue_in(q, &node);
+                //printf("in : %d %d\n", out_node->x - 1, out_node->y);
+            }
+
+            if(out_node->x + 1 < boardRowSize && board[out_node->x + 1][out_node->y] == 'O'){
+                node.x = out_node->x + 1;
+                node.y = out_node->y;
+                board[out_node->x + 1][out_node->y] = '*';
+                queue_in(q, &node);
+                //printf("in : %d %d\n", out_node->x + 1, out_node->y);
+            }
+
+            if(out_node->y - 1 >= 0 && board[out_node->x][out_node->y - 1] == 'O'){
+                node.x = out_node->x;
+                node.y = out_node->y - 1;
+                board[out_node->x][out_node->y - 1] = '*';
+                queue_in(q, &node);
+                //printf("in : %d %d\n", out_node->x, out_node->y-1);
+            }
+
+            if(out_node->y + 1 < boardColSize && board[out_node->x][out_node->y + 1] == 'O'){
+                node.x = out_node->x;
+                node.y = out_node->y + 1;
+                board[out_node->x][out_node->y + 1] = '*';
+                queue_in(q, &node);
+                //printf("in : %d %d\n", out_node->x, out_node->y + 1);
+            }    
         }
     }
 
     /*
-     * 如果经过了边界，就不是包围的区域，不必做处理
-     * 如果不经过边界，则是有效的包围区域，路径上面的点全部处理为'X'
+     * 1. 队列初始化
+     * 2. 边界BFS遍历，如果与边界相邻的'O'标记为'*'
+     * 3. 遍历board，将所有'O'修改为'X'、'*'修改为'O'
      */
-    if(!across_border){
-        for( int i = 0; i < boardRowSize * boardColSize; i++ ){
-            if(flag[i])
-                board[i / boardColSize][i % boardColSize] = 'X';
+
+    void solve(char** board, int boardRowSize, int boardColSize) {
+        if(boardRowSize == 0 || boardColSize == 0){
+            return ;
         }
-    }
-    
-}
+        //1. 队列初始化
+        p_queue q = queue_init();
 
-
-void solve(char** board, int boardRowSize, int boardColSize) {
-    if(boardRowSize == 0 || boardColSize == 0){
-        return ;
-    }
-        
-    int visit[boardRowSize * boardColSize];
-    for( int i = 0; i < boardRowSize * boardColSize; i++ )
-        visit[i] = 0;
-
-    p_queue q = queue_init();
-    
-    for( int i = 0; i < boardRowSize; i++ ){
-        for( int j = 0; j < boardColSize; j++ ){
-            if(board[i][j] == 'O' && visit[i * boardColSize + j] == 0){
-                //printf("%d\n", i * boardRowSize + j);
-                region_bfs(board, q, visit, boardRowSize, boardColSize, i * boardColSize + j);
-            }       
+        //2. 边界BFS遍历，如果与边界相邻的'O'标记为'*'
+        for( int i = 0; i < boardColSize; i++ ){
+            if(board[0][i] == 'O')
+                region_bfs(board, q, 0, i, boardRowSize, boardColSize);
+            if(board[boardRowSize - 1][i] == 'O')
+                region_bfs(board, q, boardRowSize - 1, i, boardRowSize, boardColSize);
         }
+
+        for( int i = 1; i < boardRowSize - 1; i++ ){
+            if(board[i][0] == 'O')
+                region_bfs(board, q, i, 0, boardRowSize, boardColSize);
+            if(board[i][boardColSize - 1] == 'O')
+                region_bfs(board, q, i, boardColSize - 1, boardRowSize, boardColSize);
+        }
+
+        //遍历board，将所有'O'修改为'X'、'*'修改为'O'
+
+        for( int i = 0; i < boardRowSize; i++ ){
+            for( int j = 0; j < boardColSize; j++ ){   
+                if(board[i][j] == 'O')
+                    board[i][j] = 'X';
+                else if(board[i][j] == '*')
+                    board[i][j] = 'O';
+            }
+        }
+        queue_destroy(q);
     }
 
-}
+#endif
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
