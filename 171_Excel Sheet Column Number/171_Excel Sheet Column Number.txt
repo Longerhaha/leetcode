@@ -1,0 +1,7 @@
+int titleToNumber(char* s) {
+    int len_s = strlen(s);
+    int res = 0;
+    for( char* p = s; p < s + len_s; p++)
+        res = res * 26 + *p - 'A' + 1;
+    return res;
+}
