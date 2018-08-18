@@ -1,0 +1,85 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *columnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** spiralMatrixIII(int R, int C, int r0, int c0, int** columnSizes, int* returnSize) {
+    /*
+    * 申请内存空间
+    */
+    int** spiral_mat = (int**)malloc(sizeof(int*) * (R * C));
+    assert(spiral_mat != NULL);
+    
+    *columnSizes = (int*)malloc(sizeof(int) * (R * C));
+    assert(*columnSizes != NULL);
+    for( int i = 0; i < R * C; i++ )
+        (*columnSizes)[i] = 2; 
+
+    int size = 0, idx = 0;
+    int row, col;
+    //先加入起始点
+    spiral_mat[0] = (int*)malloc(sizeof(int) * 2);
+    assert(spiral_mat[0] != NULL);
+    spiral_mat[0][0] = r0;
+    spiral_mat[0][1] = c0;
+    idx++;
+    size += 1;
+    
+    while( idx < R * C ){
+        col = c0 + 1;
+        for( row = r0; row < r0 + size * 2; row++ ){
+            if(0 <= row && row < R && 0 <= col && col < C){
+                spiral_mat[idx] = (int*)malloc(sizeof(int) * 2);
+                assert(spiral_mat[idx] != NULL);
+                spiral_mat[idx][0] = row;
+                spiral_mat[idx][1] = col;
+                idx++;
+            }
+        }
+
+        row = r0 + 2 * size - 1;
+        for( col = c0; col > c0 - size * 2; col-- ){
+            if(0 <= row && row < R && 0 <= col && col < C){
+                spiral_mat[idx] = (int*)malloc(sizeof(int) * 2);
+                assert(spiral_mat[idx] != NULL);
+                spiral_mat[idx][0] = row;
+                spiral_mat[idx][1] = col;
+                idx++;
+            }
+        }
+        
+        
+        col = c0 - 2 * size + 1;
+        for( row = r0 + 2 * size - 2; row >= r0 - 1; row-- ){
+            if(0 <= row && row < R && 0 <= col && col < C){
+                spiral_mat[idx] = (int*)malloc(sizeof(int) * 2);
+                assert(spiral_mat[idx] != NULL);
+                spiral_mat[idx][0] = row;
+                spiral_mat[idx][1] = col;
+                idx++;
+            }
+        }
+        
+        row = r0 - 1;
+        for( col = c0 - 2 * size + 2; col <= c0 + 1; col++ ){
+            if(0 <= row && row < R && 0 <= col && col < C){
+                spiral_mat[idx] = (int*)malloc(sizeof(int) * 2);
+                assert(spiral_mat[idx] != NULL);
+                spiral_mat[idx][0] = row;
+                spiral_mat[idx][1] = col;
+                idx++;
+                
+            }
+        }
+        
+        //printf("%d\n", idx);
+        //调整下一轮
+        r0 = r0 - 1;
+        c0 = c0 + 1;
+        size += 1;
+        
+    }
+    *returnSize = idx;
+    return spiral_mat;
+    
+}
