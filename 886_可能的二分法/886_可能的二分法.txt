@@ -1,0 +1,94 @@
+typedef struct adj_table_tag* p_adj_table; 
+typedef struct adj_table_tag{
+    int number;
+    p_adj_table next;
+}adj_table;
+
+
+/*
+ * 插入val到对应的邻接表头
+ */
+int insert_table_tail(p_adj_table p_head, const int val){
+    while (p_head->next != NULL )
+        p_head = p_head->next;
+
+    p_adj_table tmp = (p_adj_table)malloc(sizeof(adj_table));
+    if(tmp == NULL){
+        printf("malloc table_memory error!\n");
+        exit(EXIT_FAILURE);
+    }
+    tmp->number = val;
+    tmp->next = NULL;
+    p_head->next = tmp;
+    return 1;
+}
+
+/*
+ * 存在节点i的染色方案则返回1，否则返回0
+ */
+int DFS(p_adj_table head, const int i, int* color){
+    p_adj_table tmp = (head + i)->next;
+    while( tmp != NULL ){
+        //如果被着色了，则颜色一样的话则冲突
+        if(color[tmp->number]){
+            if(color[i] == color[tmp->number])
+                return 0;
+        }
+        //未着色则着-1色
+        else{
+            color[tmp->number] = -color[i];
+            if(!DFS(head, tmp->number, color))
+                return 0;
+        }    
+        tmp = tmp->next;
+    }
+    return 1;
+}
+
+/*
+ * 点着色问题
+ */
+bool possibleBipartition(int N, int** dislikes, int dislikesRowSize, int *dislikesColSizes) {
+    p_adj_table p_table_head = (p_adj_table)malloc(sizeof(adj_table) * N);
+    assert(p_table_head != NULL);
+    //初始化头空节点
+    for( int i = 0; i < N; i++ ){
+        p_table_head[i].number = -1;
+        p_table_head[i].next = NULL;
+    }
+    
+    //建立邻接表
+    for( int i = 0; i < dislikesRowSize; i++ ){
+        insert_table_tail(p_table_head + dislikes[i][0] - 1, dislikes[i][1] - 1);
+        insert_table_tail(p_table_head + dislikes[i][1] - 1, dislikes[i][0] - 1);
+    }
+    /*
+     * 打印表
+    for( int i = 0; i < N; i++ ){
+        p_adj_table tmp = (p_table_head + i)->next;
+        printf("%d->", i + 1);
+        while( tmp != NULL ){
+            printf("%d->", tmp->number + 1);
+            tmp = tmp->next;
+        }
+        printf("NULL\n");
+        
+    }*/
+    
+    
+    /*
+     * 如果存在节点i的染色方案则继续下一个节点，否则返回false
+     */
+    int color[N];
+    memset(color, 0, sizeof(int) * N);
+    for( int i = 0; i < N; i++ ){
+        //被染色的肯定是遍历的
+        if(color[i])
+            continue;
+        color[i] = 1;//着1色
+        if(!DFS(p_table_head, i, color))
+            return false;
+    }
+    //所有节点i的染色方案都存在，则返回true
+    return true;
+}
