@@ -1,0 +1,40 @@
+/**
+ * Return an array of size *returnSize.
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+char** findAndReplacePattern(char** words, int wordsSize, char* pattern, int* returnSize) {
+    char** ans = (char**)malloc(sizeof(char*) * wordsSize);
+    int ans_idx = 0;
+    if(ans == NULL){
+        printf("malloc ans memory error!\n");
+        exit(EXIT_FAILURE);
+    }
+    for( int i = 0; i < wordsSize; i++ ){
+        char* word = words[i];
+        char dict1[26], dict2[26];
+        memset(dict1, '#', sizeof(char) * 26);
+        memset(dict2, '#', sizeof(char) * 26);
+        int match = 1;
+        for( int j = 0; j < strlen(pattern); j++ ){
+            if(dict1[pattern[j] - 'a'] == '#' && dict2[word[j] - 'a'] == '#'){
+                dict1[pattern[j] - 'a'] = word[j];
+                dict2[word[j] - 'a'] = pattern[j];
+            }   
+            else if(dict1[pattern[j] - 'a'] != word[j] || dict2[word[j] - 'a'] != pattern[j]){
+                match = 0;
+                break;
+            }       
+        }
+        if(match){
+            ans[ans_idx] = (char*)malloc(sizeof(char) * (strlen(pattern) + 1));
+            if(ans[ans_idx] == NULL){
+                printf("malloc ans[%d] memory error!\n", ans_idx);
+                exit(EXIT_FAILURE);
+            }
+            strcpy(ans[ans_idx], word);
+            ans_idx++;
+        }
+    }
+    *returnSize = ans_idx;
+    return ans;
+}
