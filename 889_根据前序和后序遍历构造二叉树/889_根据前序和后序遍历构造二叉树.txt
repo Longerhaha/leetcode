@@ -1,0 +1,40 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+/*
+ * 找出pre_val在post的位置
+ */
+int find(int* post, int postSize, int pre_val){
+    int i;
+    for( int i = 0; i < postSize; i++ ){
+        if(post[i] == pre_val)
+            return i;
+    }
+    return -1;//错误
+}
+
+/*
+ * 递归建立树，以前序的第二个节点区分左右子树
+ */
+struct TreeNode* constructFromPrePost(int* pre, int preSize, int* post, int postSize) {
+    struct TreeNode* head = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    head->val = pre[0];
+    //只有一个节点其孩子都是NULL
+    if(preSize <= 1){
+        head->left = NULL;
+        head->right = NULL;
+    }
+    else{
+        int idx = find(post, postSize, pre[1]);
+        head->left = constructFromPrePost(pre + 1, idx + 1, post, idx + 1);
+        //如果此时preSize - 2说明右子树没有数据，也就是右子树是NULL
+        head->right = idx == preSize - 2 ? NULL : constructFromPrePost(pre + 1 + (idx + 1), preSize - (1 + (idx + 1)), post + (idx + 1), postSize - (1 + (idx + 1)));
+    }
+    return head;
+    
+}
